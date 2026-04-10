@@ -1,0 +1,44 @@
+.admin-page {
+  padding: 1.5rem 2rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.admin-page h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.management-tabs {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+.management-tabs a {
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #374151;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.management-tabs a:hover {
+  background: #f3f4f6;
+}
+
+.management-tabs a.active {
+  background: #2563eb;
+  color: white;
+}
+
+.management-content {
+  margin-top: 1rem;
+}

@@ -1,0 +1,143 @@
+.page {
+  /* padding: 20px; */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Prevent table overflow */
+.tableWrapper {
+  width: 100%;
+  max-width: 100%;
+  max-height: 410px;   /* ← fixed scroll height */
+  overflow-y: auto;    /* ← enables vertical scroll */
+  overflow-x: auto;
+  display: block;
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+}
+
+.tableWrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Search Input */
+.searchInput {
+  width: 260px;
+  padding: 10px 14px;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fafafa;
+  transition: 0.2s ease;
+  color: #333;
+  margin-right: 20px;
+}
+
+.searchInput:focus {
+  background: #fff;
+  border-color: #4a90e2;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.25);
+}
+
+.filterSelect {
+  padding: 10px 14px;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fafafa;
+  color: #333;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.filterSelect:focus {
+  background: #fff;
+  border-color: #4a90e2;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.25);
+}
+
+/* Table */
+.adminTable {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  word-break: break-word;       /* ← REQUIRED */
+}
+
+.adminTable th,
+.adminTable td {
+  padding: 12px 14px;
+  word-wrap: break-word;
+  white-space: normal;
+  overflow-wrap: anywhere;  
+  word-break: break-word; /* strongest rule */
+}
+
+.adminTable thead th {
+  position: sticky;
+  top: 0;
+  background: #f3f4f6;
+  z-index: 2;
+}
+
+.adminTable th {
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 1px solid #e5e5e5;
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+}
+
+.adminTable td {
+  font-size: 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.adminTable tr:hover {
+  background: #f9fbff;
+}
+
+/* Buttons */
+.editBtn,
+.deleteBtn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+  transition: 0.2s ease;
+}
+
+.editBtn {
+  background: #4a90e2;
+  color: white;
+  margin-right: 6px;
+}
+
+.editBtn:hover {
+  background: #3a7ac4;
+}
+
+.deleteBtn {
+  background: #ff4d4f;
+  color: white;
+}
+
+.deleteBtn:hover {
+  background: #d9363e;
+}

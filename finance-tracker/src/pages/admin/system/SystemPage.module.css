@@ -1,0 +1,21 @@
+.container {
+  padding: 20px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.section {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.placeholder {
+  color: #777;
+  font-size: 14px;
+}

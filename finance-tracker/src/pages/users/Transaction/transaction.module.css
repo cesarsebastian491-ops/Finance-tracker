@@ -1,0 +1,121 @@
+
+
+.title h3{
+   font-size: 1.5rem;
+  color: var(--color-tertiary);
+  font-family: var(--font-headline);
+  padding-bottom: 20px;
+}
+
+/* Base table */
+.runningTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  background: var(--surface);
+}
+.runningTableWrapper {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--surface);
+  margin-top: 10px;
+  min-height: 0;  
+}
+/* Header */
+.runningTable th {
+  background: var(--surface-alt);
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+/* Table cells */
+.runningTable td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-size: 14px;
+}
+
+/* Hover row */
+.runningTable tr:hover {
+  background: var( --surface-alt);
+  transition: background 0.15s ease;
+}
+
+
+
+/* ============================
+   RUNNING BALANCE PAGE LAYOUT
+   ============================ */
+
+.runningPage {
+  height: calc(100vh - 260px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollable table wrapper */
+.runningTableWrapper {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--surface);
+  margin-top: -10px;
+}
+
+/* Premium scrollbar */
+.runningTableWrapper::-webkit-scrollbar {
+  width: 8px;
+}
+
+.runningTableWrapper::-webkit-scrollbar-track {
+  background: var(--surface-alt);
+  border-radius: 10px;
+}
+
+.runningTableWrapper::-webkit-scrollbar-thumb {
+  background: #c7c7c7;
+  border-radius: 10px;
+  border: 2px solid #f2f2f2;
+  transition: background 0.2s ease;
+}
+
+.runningTableWrapper::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Firefox */
+.runningTableWrapper {
+  scrollbar-width: thin;
+  scrollbar-color: #c7c7c7 #f2f2f2;
+}
+
+/* Empty state */
+.txEmpty {
+  text-align: center;
+  padding: 20px;
+  font-size: 14px;
+  color: #777;
+}
+
+/* FIXED: Correct selectors */
+.runningTable td.revenueAmount {
+  color: var(--color-income);
+  font-weight: 700;
+}
+
+.runningTable td.expenseAmount {
+  color: var(--color-expense);
+  font-weight: 700;
+}

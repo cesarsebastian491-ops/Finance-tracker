@@ -1,0 +1,29 @@
+.container {
+  padding: 20px;
+}
+
+.title {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  text-decoration: none;
+  color: #333;
+  transition: 0.2s ease;
+}
+
+.card:hover {
+  border-color: #4a90e2;
+  transform: translateY(-3px);
+}

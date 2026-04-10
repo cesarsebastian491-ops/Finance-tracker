@@ -1,0 +1,32 @@
+.container {
+  padding: 20px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.ok {
+  color: #0f9d58;
+  font-weight: bold;
+}
+
+.bad {
+  color: #d93025;
+  font-weight: bold;
+}

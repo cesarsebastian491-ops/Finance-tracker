@@ -1,0 +1,85 @@
+/* ============================
+   FONT IMPORTS (LOCAL)
+   ============================ */
+@import "@fontsource/manrope/400.css";
+@import "@fontsource/manrope/600.css";
+@import "@fontsource/manrope/700.css";
+
+@import "@fontsource/inter/300.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+:root {
+  /* ============================
+     CORE BRAND COLORS
+     ============================ */
+  --color-primary: #004D40;
+  --color-secondary: #26A69A;
+  --color-tertiary: #795548;
+  --color-neutral: #ffffff;
+
+  --color-primary-light: #00695C;
+  --color-primary-dark: #00332D;
+
+  /* ============================
+     TEXT COLORS
+     ============================ */
+  --text-main: #1a1a1a;
+  --text-light: #ffffff;
+   --text-muted: #777777;
+
+  /* ============================
+     SURFACE / UI COLORS
+     ============================ */
+  --surface: #ffffff;
+  --surface-alt: #f5f5f5;
+  --border-color: #e0e0e0;
+
+  /* ============================
+     SEMANTIC COLORS
+     ============================ */
+
+  /* Income / Revenue */
+  --color-income: #26A69A;
+   --color-income-dark: #00796B;
+  --color-income-light: #B2DFDB;
+
+  /* Expense */
+  --color-expense: #E57373;
+  --color-expense-dark: #D32F2F;
+  --color-expense-light: #FFEBEE;
+
+  /* Add / Create */
+  --color-add: #2E7D32;
+  --color-add-dark: #1B5E20;
+  --color-add-light: #C8E6C9;
+
+  /* Edit */
+  --color-edit: #0277BD;
+  --color-edit-dark: #01579B;
+  --color-edit-light: #BBDEFB;
+
+  /* Delete */
+  --color-delete: #D32F2F;
+  --color-delete-dark: #B71C1C;
+  --color-delete-light: #FFCDD2;
+
+  /* Warnings */
+  --color-warning: #F9A825;
+  --color-warning-light: #FFF8E1;
+
+  /* Success */
+  --color-success: #2E7D32;
+  --color-success-light: #E8F5E9;
+
+  /* Info */
+  --color-info: #0288D1;
+  --color-info-light: #E1F5FE;
+
+  /* ============================
+     FONTS
+     ============================ */
+  --font-headline: "Manrope", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-label: "Inter", sans-serif;
+}

@@ -1,0 +1,56 @@
+import { useEffect, useState } from "react";
+import { useNavigate, NavLink } from "react-router-dom";
+import styles from "./ViewProfile.module.css";
+
+export default function ViewProfile() {
+    const [user, setUser] = useState(null);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const stored = JSON.parse(localStorage.getItem("user"));
+        setUser(stored);
+    }, []);
+
+    if (!user) return <div>Loading...</div>;
+
+    return (
+        <div className={styles.vpContainer}>
+            <button className={styles.vpBackBtn} onClick={() => navigate(-1)}>
+                ← Back
+            </button>
+
+            <div className={styles.vpCard}>
+                <div className={styles.vpAvatar}>
+                    {user?.username?.charAt(0)?.toUpperCase()}
+                </div>
+
+                <h2 className={styles.vpName}>
+                    {user.firstName} {user.lastName}
+                </h2>
+
+                <p className={styles.vpUsername}>@{user.username}</p>
+
+                <div className={styles.vpInfo}>
+                    <div className={styles.vpRow}>
+                        <label>Email</label>
+                        <p>{user.email}</p>
+                    </div>
+
+                    <div className={styles.vpRow}>
+                        <label>Phone</label>
+                        <p>{user.phone || "Not set"}</p>
+                    </div>
+
+                    <div className={styles.vpRow}>
+                        <label>Account Created</label>
+                        <p>{user.createdAt?.slice(0, 10) || "—"}</p>
+                    </div>
+                </div>
+
+                <NavLink to="/user/profile/edit" className={styles.vpEditBtn}>
+                    Edit Profile
+                </NavLink>
+            </div>
+        </div>
+    );
+}

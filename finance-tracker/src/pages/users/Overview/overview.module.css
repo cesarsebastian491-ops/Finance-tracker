@@ -1,0 +1,213 @@
+/* --------------------------------------------- */
+/* OVERVIEW PAGE — TABLE + LAYOUT (CSS MODULE)   */
+/* --------------------------------------------- */
+
+.content {
+  padding: 20px 28px;
+  font-family: var(--font-body);
+  color: var(--color-tertiary);
+}
+
+
+.pageTransition {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.title h5 {
+  font-size: 1.5rem;
+  color: var(--color-tertiary);
+  font-family: var(--font-headline);
+  padding-bottom: 20px;
+}
+
+
+/* --------------------------------------------- */
+.topRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.search {
+  padding: 8px 12px;
+  width: 200px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--surface);
+  color: var(--text-main);
+  transition: 0.2s ease;
+  font-family: var(--font-body);
+}
+
+.search:focus {
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 8px var(--color-secondary);
+  outline: none;
+}
+
+.button {
+  padding: 8px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  font-family: var(--font-body);
+}
+
+.button:hover {
+  background: var(--color-secondary);
+  color: var(--text-light);
+  border-color: var(--color-secondary);
+}
+
+/* --------------------------------------------- */
+/* CARDS                                         */
+/* --------------------------------------------- */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  padding: 16px;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  color: var(--color-tertiary);
+}
+
+.value {
+  font-weight: 700;
+  margin-top: 8px;
+  color: var(--color-secondary);
+  font-family: var(--font-headline);
+}
+
+/* --------------------------------------------- */
+/* TABLE                                         */
+/* --------------------------------------------- */
+
+.runningTableWrapper {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--surface);
+  min-height: 0;
+}
+
+.runningTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+  font-family: var(--font-body);
+}
+
+.runningTable thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-alt);
+  z-index: 2;
+}
+
+.runningTable th {
+  padding: 14px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border-color);
+  font-family: var(--font-label);
+}
+
+.runningTable td {
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
+}
+
+.runningTable tbody tr:hover {
+  background: var(--color-secondary-light);
+}
+
+.runningTable td.green {
+  color: var(--color-income);
+  font-weight: 600;
+}
+
+.runningTable td.red {
+  color: var(--color-expense);
+  font-weight: 600;
+}
+
+.txEmpty {
+  padding: 28px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------- */
+/* BOTTOM SECTIONS                               */
+/* --------------------------------------------- */
+
+.bottomSections {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  height: calc(100vh - 350px);
+  overflow: hidden;
+  padding-top: 15px;
+}
+
+.transactions {
+  flex: 0 0 60%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.report {
+  flex: 0 0 40%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.txList {
+  flex: 1;
+  overflow: hidden;
+  background: var(--surface);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.txList h3 {
+   margin-bottom: 12px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  font-family: var(--font-headline);
+  color: var(--color-tertiary);
+}
+
+
+.txHeader h3 {
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  font-family: var(--font-headline);
+  color: var(--color-tertiary);
+}

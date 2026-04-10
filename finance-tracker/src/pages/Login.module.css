@@ -1,0 +1,195 @@
+
+/* PAGE WRAPPER */
+.loginPage {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  background: var(--surface);
+  font-family: var(--font-body);
+}
+
+.leftPanel {
+  width: 35%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+
+  /* ⭐ Add your color here */
+  background: var(--surface-alt); /* deep green */
+  color: var(--text-primary-dark); /* makes text readable */
+}
+
+.card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface-alt);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+/* TITLES */
+.title {
+  font-family: var(--font-headline);
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+/* FORM */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.form label {
+  font-size: 0.85rem;
+  font-family: var(--font-label);
+  color: var(--text-muted);
+}
+
+.form input {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-alt);
+  font-size: 0.95rem;
+  color: var(  --text-muted);
+}
+
+.rowBetween {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.remember {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.linkBtn {
+  background: none;
+  border: none;
+  color: var(--color-secondary);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+/* BUTTONS */
+.loginBtn {
+  margin-top: 10px;
+  padding: 12px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.loginBtn:hover {
+  background: var(--color-primary-dark);
+}
+
+.backBtn {
+  margin-top: 10px;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* REGISTER SECTION */
+.registerSection {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.registerLink {
+  color: var(--color-secondary);
+  font-weight: 600;
+}
+
+/* RIGHT PANEL */
+.rightPanel {
+  width: 70%;
+  /* background-image: url("/images/login-bg.jpg"); replace with your image */
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  background: var(--color-primary-dark);
+}
+
+.overlayText {
+  position: absolute;
+  bottom: 40px;
+  left: 40px;
+  color: white;
+}
+
+.overlayText h2 {
+  font-size: 1.6rem;
+  font-family: var(--font-headline);
+}
+
+.overlayText p {
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+
+/* FLOATING LABEL INPUTS */
+.inputGroup {
+  position: relative;
+  margin-bottom: 18px;
+}
+
+.inputGroup input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-alt);
+  font-size: 0.95rem;
+  color: var(--text-main);
+  transition: border-color 0.2s ease;
+}
+
+.inputGroup input:focus {
+  border-color: var(--color-secondary);
+  /* box-shadow: 0 0 8px var(--color-secondary); */
+  outline: none;
+}
+
+/* Label positioning */
+.inputGroup label {
+  position: absolute;
+  left: 14px;
+  top: 12px;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-family: var(--font-label);
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+/* Move label when focused or filled */
+.inputGroup input:focus + label,
+.inputGroup input:not(:placeholder-shown) + label {
+  top: -14px;
+  left: 10px;
+  font-size: 0.75rem;
+  color: var(--color-secondary);
+  background: transparent;
+  padding: 0;
+}

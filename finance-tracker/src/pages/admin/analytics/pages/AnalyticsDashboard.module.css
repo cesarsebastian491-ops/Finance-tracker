@@ -1,0 +1,85 @@
+    /* Dashboard container */
+.container {
+  padding: 10px 0;
+}
+
+/* Dashboard title */
+.title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #111827;
+}
+
+/* Grid layout for cards */
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-top: 10px;
+}
+
+/* Individual card */
+.card {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #333;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  border: 1px solid #e5e7eb;
+  transition: 0.2s ease;
+  display: block;
+  cursor: pointer;
+}
+
+/* Hover animation */
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  border-color: #d1d5db;
+}
+
+/* Card title */
+.card h3 {
+  margin-bottom: 6px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Card description */
+.card p {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Summary grid */
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+/* Summary card */
+.summaryCard {
+  background: #f9fafb;
+  padding: 18px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.summaryCard h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.summaryCard p {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+}

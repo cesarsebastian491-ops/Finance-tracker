@@ -1,0 +1,82 @@
+.summaryCards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.summaryCard {
+  background: #ffffff;
+  padding: 1.4rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  border: 1px solid #e5e7eb;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.summaryCard::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 6px;
+  height: 100%;
+  border-radius: 12px 0 0 12px;
+}
+
+.cardUsers::before {
+  background: #3b82f6;
+}
+
+.cardCategories::before {
+  background: #6b7280;
+}
+
+.cardIncome::before {
+  background: #22c55e;
+}
+
+.cardExpense::before {
+  background: #ef4444;
+}
+
+.cardLogs::before {
+  background: #f59e0b;
+}
+
+.cardTransactions::before {
+  background: #8b5cf6;
+}
+
+.summaryCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.summaryCard h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.summaryCard p {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .summaryCards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .summaryCards {
+    grid-template-columns: 1fr;
+  }
+}

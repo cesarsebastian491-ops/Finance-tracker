@@ -1,0 +1,50 @@
+.admin-layout {
+  display: flex;
+  height: 100vh;
+  background: #f5f7fa;
+}
+
+.admin-sidebar {
+  width: 230px;
+  background: #ffffff;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+}
+
+.admin-logo {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.admin-link {
+  padding: 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+}
+
+.admin-link.active {
+  background: #e8f0fe;
+  color: #1a73e8;
+}
+
+.admin-logout {
+  margin-top: auto;
+  padding: 12px;
+  background: #e63946;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.admin-content {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+}

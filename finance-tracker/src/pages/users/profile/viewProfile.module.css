@@ -1,0 +1,133 @@
+/* ============================
+   VIEW PROFILE — THEME VERSION
+   ============================ */
+
+.vpContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 16px;
+  min-height: 100vh;
+  position: relative;
+  font-family: var(--font-body);
+}
+
+
+
+.vpCard {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 24px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+  text-align: center;
+
+  /* Centering magic */
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+
+.vpAvatar {
+  width: 80px;
+  height: 80px;
+  background: var(--color-primary);
+  color: var(--text-light);
+  border-radius: 50%;
+  font-size: 32px;
+  font-weight: 700;
+  font-family: var(--font-headline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.vpName {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  font-family: var(--font-headline);
+  color: var(--text-main);
+}
+
+.vpUsername {
+  margin: 4px 0 20px;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-family: var(--font-label);
+}
+
+.vpInfo {
+  margin-top: 10px;
+  text-align: left;
+}
+
+.vpRow {
+  margin-bottom: 16px;
+}
+
+.vpRow label {
+  font-size: 13px;
+  color: var(--color-tertiary);
+  font-weight: 600;
+  font-family: var(--font-label);
+}
+
+.vpRow p {
+  margin: 2px 0 0;
+  font-size: 15px;
+  color: var(--text-main);
+  font-family: var(--font-body);
+}
+
+.vpEditBtn {
+  width: 100%;
+  padding: 12px;
+  background: var(--color-secondary);
+  color: var(--text-light);
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+  text-decoration: none;
+  font-family: var(--font-headline);
+}
+
+.vpEditBtn:hover {
+  background: var(--color-primary-light);
+  color: var(--text-light);
+
+}
+
+.vpEditBtn:active {
+  transform: scale(0.97);
+}
+
+/* Back button pinned to the top-left */
+.vpBackBtn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: none;
+  border: none;
+  color: var(--color-secondary);
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 0;
+  transition: color 0.2s ease, transform 0.15s ease;
+  font-family: var(--font-headline);
+}
+
+.vpBackBtn:hover {
+  color: var(--color-secondary-light);
+}
+
+.vpBackBtn:active {
+  transform: scale(0.97);
+}

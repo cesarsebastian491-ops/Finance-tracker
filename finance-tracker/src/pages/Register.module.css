@@ -1,0 +1,133 @@
+.registerPage {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  background: var(--surface);
+  font-family: var(--font-body);
+}
+
+/* LEFT = IMAGE PANEL */
+.leftPanel {
+  width: 65%;
+  background: var(--color-primary-dark);
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.overlayText {
+  position: absolute;
+  bottom: 40px;
+  left: 40px;
+  color: white;
+}
+
+.overlayText h2 {
+  font-size: 1.6rem;
+  font-family: var(--font-headline);
+}
+
+.overlayText p {
+  opacity: 0.9;
+}
+
+/* RIGHT = FORM PANEL */
+.rightPanel {
+  width: 35%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  background: var(--surface-alt);
+}
+
+.card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface-alt);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+/* TITLES */
+.title {
+  font-family: var(--font-headline);
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+/* FLOATING LABEL INPUTS */
+.inputGroup {
+  position: relative;
+  margin-bottom: 18px;
+}
+
+.inputGroup input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--surface);
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+
+.inputGroup input:focus {
+  border-color: var(--color-secondary);
+  /* box-shadow: 0 0 8px var(--color-secondary); */
+  outline: none;
+}
+
+.inputGroup label {
+  position: absolute;
+  left: 14px;
+  top: 12px;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+.inputGroup input:focus + label,
+.inputGroup input:not(:placeholder-shown) + label {
+  top: -14px;
+  left: 10px;
+  font-size: 0.75rem;
+  color: var(--color-secondary);
+  background: transparent;
+  padding: 0;
+}
+
+/* BUTTON */
+.registerBtn {
+  margin-top: 10px;
+  padding: 12px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.registerBtn:hover {
+  background: var(--color-primary-dark);
+}
+
+/* LOGIN LINK */
+.loginSection {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.loginLink {
+  color: var(--color-secondary);
+  font-weight: 600;
+}
