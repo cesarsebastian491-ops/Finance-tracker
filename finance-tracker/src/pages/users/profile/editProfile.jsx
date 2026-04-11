@@ -10,16 +10,40 @@ export default function EditProfile() {
   const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("user"));
-    setUser(stored);
+    const fetchUserProfile = async () => {
+      const stored = JSON.parse(localStorage.getItem("user"));
+      if (!stored?.access_token) return;
 
-    setForm({
-      firstName: stored.firstName || "",
-      lastName: stored.lastName || "",
-      username: stored.username || "",
-      email: stored.email || "",
-      phone: stored.phone || "",
-    });
+      try {
+        const res = await fetch(`${API_URL}/users/${stored.id}`, {
+          headers: { Authorization: `Bearer ${stored.access_token}` },
+        });
+        const data = await res.json();
+        if (data) {
+          setUser(data);
+          setForm({
+            firstName: data.firstName || "",
+            lastName: data.lastName || "",
+            username: data.username || "",
+            email: data.email || "",
+            phone: data.phone || "",
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch profile:", err);
+        // Fallback to localStorage
+        setUser(stored);
+        setForm({
+          firstName: stored.firstName || "",
+          lastName: stored.lastName || "",
+          username: stored.username || "",
+          email: stored.email || "",
+          phone: stored.phone || "",
+        });
+      }
+    };
+
+    fetchUserProfile();
   }, []);
 
   if (!user) return <div>Loading...</div>;
@@ -63,7 +87,7 @@ export default function EditProfile() {
       localStorage.setItem(
         "user",
         JSON.stringify({
-          ...updated,
+        ...updated, 
           access_token: token,
         })
       );

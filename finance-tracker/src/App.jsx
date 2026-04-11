@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/registerPage";
+import ForgotPassword from "./pages/ForgotPassword";
 import ProtectedRoute from "./components/protectedRoute";
 import "./theme.css";
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"></link>
@@ -50,6 +51,7 @@ function App() {
         {/* PUBLIC */}
         <Route path="/" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* USER ROUTES */}
         <Route

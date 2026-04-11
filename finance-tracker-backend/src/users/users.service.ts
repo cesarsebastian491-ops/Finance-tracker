@@ -107,7 +107,6 @@ export class UsersService {
 
   async updateUser(id: number, dto) {
     const user = await this.usersRepo.findOne({ where: { id } });
-    console.log("🔥 UPDATE_USER TRIGGERED — DTO:", dto);
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -313,6 +312,33 @@ export class UsersService {
 
   async updateLastActive(userId: number) {
     await this.usersRepo.update(userId, { lastActive: new Date() });
+    return { success: true };
+  }
+
+  async findByEmail(email: string) {
+    return this.usersRepo.findOne({ where: { email } });
+  }
+
+  async updatePassword(userId: number, newPassword: string) {
+    const user = await this.usersRepo.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Hash new password
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    // Save new password
+    await this.usersRepo.update(userId, { password: hashed });
+
+    // Log the action
+    await this.logsService.create({
+      userId: userId,
+      action: 'RESET_PASSWORD',
+      message: `User '${user.username}' reset their password via forgot password`,
+    });
+
     return { success: true };
   }
 }

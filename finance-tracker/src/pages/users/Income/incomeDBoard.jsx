@@ -178,7 +178,6 @@ export default function IncomeDBoard() {
         return (
             inc.source?.toLowerCase().includes(term) ||
             inc.category?.toLowerCase().includes(term) ||
-            inc.description?.toLowerCase().includes(term) ||
             formatDate(inc.date).toLowerCase().includes(term) ||
             formatMoney(inc.amount).toLowerCase().includes(term)
         );
@@ -270,14 +269,14 @@ export default function IncomeDBoard() {
             "Date",
             "Source",
             "Income Amount",
-            "Description"
+            "Recurring"
         ];
 
         const values = rows.map(inc => [
             formatDate(inc.date),
             inc.source || "—",
             formatMoney(inc.amount),
-            inc.description || "—"
+            inc.isRecurring ? "Yes" : "No"
         ]);
 
         const csvContent =
@@ -364,7 +363,7 @@ export default function IncomeDBoard() {
                                             <th>Source</th>
                                             <th>Date</th>
                                             <th>Amount</th>
-                                            <th>Description</th>
+                                            <th>Recurring</th>
                                         </tr>
                                     </thead>
 
@@ -385,7 +384,9 @@ export default function IncomeDBoard() {
                                                     <td>{inc.source}</td>
                                                     <td>{formatDate(inc.date)}</td>
                                                     <td className={styles.incomeAmount}>{formatMoney(inc.amount)}</td>
-                                                    <td>{inc.description}</td>
+                                                    <td className={inc.isRecurring ? styles.recurringYes : styles.recurringNo}>
+                                                        {inc.isRecurring ? "Yes" : "No"}
+                                                    </td>
                                                 </tr>
                                             ))
                                         )}
@@ -428,20 +429,20 @@ export default function IncomeDBoard() {
                         onSubmit={handleAddIncome}
                         editData={editData}
                     />
-
-                    {selectedIncome && (
-                        <IncomeViewModal
-                            income={selectedIncome}
-                            onClose={() => setSelectedIncome(null)}
-                            onEdit={(inc) => {
-                                setEditData(inc);
-                                setOpenAddModal(true);
-                            }}
-                            onDelete={handleDelete}
-                        />
-                    )}
                 </div>
             </main>
+
+            {selectedIncome && (
+                <IncomeViewModal
+                    income={selectedIncome}
+                    onClose={() => setSelectedIncome(null)}
+                    onEdit={(inc) => {
+                        setEditData(inc);
+                        setOpenAddModal(true);
+                    }}
+                    onDelete={handleDelete}
+                />
+            )}
         </>
     );
 
@@ -454,30 +455,96 @@ export default function IncomeDBoard() {
                     <h2 className={styles.infoTitle}>{income.source}</h2>
 
                     <div className={styles.infoContent}>
-                        {/* <div className={styles.infoRow}>
-                            <span className={styles.label}>Category</span>
-                            <span className={styles.value}>{income.category || "—"}</span>
-                        </div> */}
 
-                        <div className={styles.infoRow}>
-                            <span className={styles.label}>Date</span>
-                            <span className={styles.value}>{income.date}</span>
+                        <div className={styles.twoColRow}>
+                            <div className={styles.colItem}>
+                                <span className={styles.label}>Date</span>
+                                <span className={styles.value}>{formatDate(income.date)}</span>
+                            </div>
                         </div>
 
+                        {/* AMOUNT */}
                         <div className={styles.infoRow}>
                             <span className={styles.label}>Amount</span>
-                            <span className={styles.amountValue}> {formatMoney(income.amount)}</span>
+                            <span className={styles.amountValue}>{formatMoney(income.amount)}</span>
                         </div>
 
+                        {/* DESCRIPTION */}
                         <div className={styles.infoRow}>
                             <span className={styles.label}>Description</span>
                             <span className={styles.value}>{income.description || "No description"}</span>
                         </div>
+
+                        {/* -------------------------------------- */}
+                        {/* ADDITIONAL CHARGES SECTION */}
+                        {/* -------------------------------------- */}
+
+                        <div className={styles.twoColumnSection}>
+
+                            {/* LEFT COLUMN — Additional Charges */}
+                            {(income.tax > 0 ||
+                                income.serviceFee > 0 ||
+                                income.discount > 0 ||
+                                income.otherCharge > 0) && (
+                                    <div className={styles.column}>
+                                        <h5 className={styles.sectionTitle}>Additional Charges</h5>
+
+                                        {income.tax > 0 && (
+                                            <div className={styles.infoRow}>
+                                                <h6 className={styles.label}>Tax</h6>
+                                                <h7 className={styles.value}>{formatMoney(income.tax)}</h7>
+                                            </div>
+                                        )}
+
+                                        {income.serviceFee > 0 && (
+                                            <div className={styles.infoRow}>
+                                                <h5 className={styles.label}>Service Fee</h5>
+                                                <span className={styles.value}>{formatMoney(income.serviceFee)}</span>
+                                            </div>
+                                        )}
+
+                                        {income.discount > 0 && (
+                                            <div className={styles.infoRow}>
+                                                <span className={styles.label}>Discount</span>
+                                                <span className={styles.value}>-{formatMoney(income.discount)}</span>
+                                            </div>
+                                        )}
+
+                                        {income.otherCharge > 0 && (
+                                            <div className={styles.infoRow}>
+                                                <span className={styles.label}>Other Charge</span>
+                                                <span className={styles.value}>{formatMoney(income.otherCharge)}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                            {/* RIGHT COLUMN — Recurring */}
+                            {income.isRecurring && (
+                                <div className={styles.column}>
+                                    <h5 className={styles.sectionTitle}>Recurring</h5>
+
+                                    <div className={styles.infoRow}>
+                                        <span className={styles.label}>Frequency</span>
+                                        <span className={styles.value}>{income.recurringType}</span>
+                                    </div>
+
+                                    {income.recurringEndDate && (
+                                        <div className={styles.infoRow}>
+                                            <span className={styles.label}>Ends On</span>
+                                            <span className={styles.value}>{formatDate(income.recurringEndDate)}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                        </div>
+
                     </div>
 
                     <div className={styles.infoActions}>
                         <div className={styles.actionRow}>
-                            <button className={styles.editBtn} onClick={() => onEdit(income)}>Edit</button>
+                            <button className={styles.editBtn} onClick={() => { onClose(); onEdit(income); }}>Edit</button>
                             <button className={styles.deleteBtn} onClick={() => onDelete(income.id)}>Delete</button>
                         </div>
 

@@ -174,4 +174,20 @@ export class AuthController {
   ping() {
     return { ok: true };
   }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body('email') email: string) {
+    const result = await this.authService.generatePasswordResetCode(email);
+    return result;
+  }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Body('email') email: string,
+    @Body('code') code: string,
+    @Body('newPassword') newPassword: string,
+  ) {
+    const result = await this.authService.resetPassword(email, code, newPassword);
+    return result;
+  }
 }

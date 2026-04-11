@@ -123,11 +123,11 @@
 /* RIGHT PANEL */
 .rightPanel {
   width: 70%;
-  /* background-image: url("/images/login-bg.jpg"); replace with your image */
+  background-image: url('/images/finance-bg.jpg');
   background-size: cover;
   background-position: center;
   position: relative;
-  background: var(--color-primary-dark);
+  background-color: var(--color-primary-dark);
 }
 
 .overlayText {
@@ -157,6 +157,7 @@
 .inputGroup input {
   width: 100%;
   padding: 12px 14px;
+  padding-right: 45px;
   border-radius: 8px;
   border: 1px solid var(--border-color);
   background: var(--surface-alt);
@@ -169,6 +170,27 @@
   border-color: var(--color-secondary);
   /* box-shadow: 0 0 8px var(--color-secondary); */
   outline: none;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.passwordToggle:hover {
+  opacity: 1;
 }
 
 /* Label positioning */
@@ -192,4 +214,80 @@
   color: var(--color-secondary);
   background: transparent;
   padding: 0;
+}
+
+/* ===== SMOOTH TRANSITIONS ===== */
+
+/* Keyframe animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes exitLeft {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+}
+
+@keyframes exitRight {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Apply animations */
+.fadeIn {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.slideIn {
+  animation: slideIn 0.5s ease-out;
+}
+
+.stepContent {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.loginPage.exitLeft .leftPanel {
+  animation: exitLeft 0.6s ease-in forwards;
+}
+
+.rightPanel.exitRight {
+  animation: exitRight 0.6s ease-in forwards;
+}
+
+/* Smooth transitions for panels */
+.leftPanel,
+.rightPanel {
+  transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out;
+}
+
+.card {
+  transition: all 0.3s ease;
 }

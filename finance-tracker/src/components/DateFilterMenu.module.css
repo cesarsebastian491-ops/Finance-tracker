@@ -7,7 +7,7 @@
 
 /* FILTER BUTTON */
 .filterButton {
-    background: var(--color-primary-light);
+    background: var(--color-secondary);
     border: 1px solid var(--color-secondary);
     padding: 10px 16px;
     border-radius: 8px;
@@ -19,8 +19,9 @@
 }
 
 .filterButton:hover {
-    background: var(--color-primary);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    background: var(--color-secondary-dark);
+    border: 1px solid var(--border-color);
+    color: var(--text-light);
 }
 
 /* DROPDOWN PANEL */
@@ -47,6 +48,7 @@
         opacity: 0;
         transform: translateY(-6px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -75,7 +77,8 @@
 /* ACTION BUTTON STACK */
 .filterActions {
     display: flex;
-    flex-direction: column; /* vertical stack */
+    flex-direction: column;
+    /* vertical stack */
     gap: 10px;
     margin-top: 4px;
 }

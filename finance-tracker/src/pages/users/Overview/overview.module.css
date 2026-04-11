@@ -139,7 +139,7 @@
 }
 
 .runningTable tbody tr:hover {
-  background: var(--color-secondary-light);
+  background: var(--surface-alt);
 }
 
 .runningTable td.green {

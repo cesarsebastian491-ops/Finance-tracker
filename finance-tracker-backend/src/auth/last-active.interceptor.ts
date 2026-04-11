@@ -6,10 +6,9 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '../transactions/entities/user.entity';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { Session } from 'src/sessions/session.entity';
+import { Session } from '../sessions/session.entity';
 
 @Injectable()
 export class LastActiveInterceptor implements NestInterceptor {

@@ -87,6 +87,12 @@ export class UsersController {
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @Get(':id')
+  getUserProfile(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.findOne(id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
 @Patch('last-active')
 updateLastActive(@Req() req) {
   return this.usersService.updateLastActive(req.user.id);

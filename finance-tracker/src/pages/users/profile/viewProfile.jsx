@@ -1,14 +1,30 @@
 import { useEffect, useState } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import styles from "./ViewProfile.module.css";
+import { API_URL } from "../../../config";
 
 export default function ViewProfile() {
     const [user, setUser] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
-        const stored = JSON.parse(localStorage.getItem("user"));
-        setUser(stored);
+        const fetchUserProfile = async () => {
+            const stored = JSON.parse(localStorage.getItem("user"));
+            if (!stored?.access_token) return;
+
+            try {
+                const res = await fetch(`${API_URL}/users/${stored.id}`, {
+                    headers: { Authorization: `Bearer ${stored.access_token}` },
+                });
+                const data = await res.json();
+                if (data) setUser(data);
+            } catch (err) {
+                console.error("Failed to fetch profile:", err);
+                setUser(stored); // Fallback to localStorage
+            }
+        };
+
+        fetchUserProfile();
     }, []);
 
     if (!user) return <div>Loading...</div>;

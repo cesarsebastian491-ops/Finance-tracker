@@ -157,7 +157,6 @@ export default function expenseDBoard() {
 
         return (
             exp.category?.toLowerCase().includes(term) ||
-            exp.description?.toLowerCase().includes(term) ||
             formatDate(exp.date).toLowerCase().includes(term) ||
             formatMoney(exp.amount).toLowerCase().includes(term)
         );
@@ -251,14 +250,14 @@ export default function expenseDBoard() {
             "Date",
             "Category",
             "Expense Amount",
-            "Description"
+            "Recurring"
         ];
 
         const values = rows.map(exp => [
             formatDate(exp.date),
             exp.category || "—",
             formatMoney(exp.amount),
-            exp.description || "—"
+            exp.isRecurring ? "Yes" : "No"
         ]);
 
         const csvContent =
@@ -371,7 +370,7 @@ export default function expenseDBoard() {
                                             <th>Category</th>
                                             <th>Date</th>
                                             <th>Amount</th>
-                                            <th>Description</th>
+                                            <th>Recurring</th>
                                         </tr>
                                     </thead>
 
@@ -393,7 +392,9 @@ export default function expenseDBoard() {
                                                     <td>{exp.category}</td>
                                                     <td>{formatDate(exp.date)}</td>
                                                     <td className={styles.expenseAmount}>{formatMoney(exp.amount)}</td>
-                                                    <td>{exp.description}</td>
+                                                    <td className={exp.isRecurring ? styles.recurringYes : styles.recurringNo}>
+                                                        {exp.isRecurring ? "Yes" : "No"}
+                                                    </td>
                                                 </tr>
                                             ))
                                         )}
@@ -560,7 +561,7 @@ export default function expenseDBoard() {
                     {/* ACTION BUTTONS */}
                     <div className={styles.infoActions}>
                         <div className={styles.actionRow}>
-                            <button className={styles.editBtn} onClick={() => onEdit(expense)}>Edit</button>
+                            <button className={styles.editBtn} onClick={() => { onClose(); onEdit(expense); }}>Edit</button>
                             <button className={styles.deleteBtn} onClick={() => onDelete(expense.id)}>Delete</button>
                         </div>
 

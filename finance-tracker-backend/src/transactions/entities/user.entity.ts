@@ -13,62 +13,62 @@ export type UserRole = 'admin' | 'staff' | 'user';
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  username: string;
+  username!: string;
 
   @Column()
-  email: string;
+  email!: string;
 
   @Column()
-  password: string;
+  password!: string;
 
   @Column()
-  firstName: string;
+  firstName!: string;
 
   @Column()
-  lastName: string;
+  lastName!: string;
 
   @Column()
-  phone: string;
+  phone!: string;
 
   @Column({
     type: 'enum',
     enum: ['admin', 'staff', 'user'],
     default: 'user',
   })
-  role: UserRole;
+  role!: UserRole;
 
   @Column({
     type: 'enum',
     enum: ['active', 'disabled'],
     default: 'active',
   })
-  status: string;
+  status!: string;
 
   // 🔐 2FA FIELDS (TOTP)
   @Column({ default: false })
-  twoFactorEnabled: boolean;
+  twoFactorEnabled!: boolean;
 
   @Column({ type: 'text', nullable: true })
-  twoFactorSecret: string | null;
+  twoFactorSecret!: string | null;
 
   @Column({ default: false })
-  twoFactorVerified: boolean;
+  twoFactorVerified!: boolean;
 
   @Column({ type: 'text', nullable: true })
-  twoFactorMethod: string | null; // 'totp' | 'sms' | 'email'
+  twoFactorMethod!: string | null; // 'totp' | 'sms' | 'email'
 
   @OneToMany(() => Transaction, (transaction) => transaction.user)
-  transactions: Transaction[];
+  transactions!: Transaction[];
 
   @OneToMany(() => Log, (log) => log.user)
-  logs: Log[];
+  logs!: Log[];
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @Column({ type: 'timestamp', nullable: true })
-  lastActive: Date;
+  lastActive!: Date;
 }

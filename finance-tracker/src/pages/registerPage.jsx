@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import styles from "./Register.module.css";
 import { API_URL } from "../config";
 
@@ -12,6 +12,10 @@ export default function Register() {
     lastName: "",
     phone: "",
   });
+
+  const [isExiting, setIsExiting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -29,18 +33,21 @@ export default function Register() {
     const data = await res.json();
 
     if (data.success) {
-      alert("Registered successfully!");
-      window.location.href = "/";
+      setIsExiting(true);
+      setTimeout(() => {
+        alert("Registered successfully!");
+        navigate("/", { replace: true });
+      }, 600);
     } else {
       alert("Registration failed");
     }
   };
 
   return (
-    <div className={styles.registerPage}>
+    <div className={`${styles.registerPage} ${isExiting ? styles.exitRight : ""}`}>
       
       {/* LEFT SIDE — IMAGE PANEL */}
-      <div className={styles.leftPanel}>
+      <div className={`${styles.leftPanel} ${isExiting ? styles.exitLeft : ""}`}>
         <div className={styles.overlayText}>
           <h2>Join the Platform</h2>
           <p>Your financial journey starts today</p>
@@ -49,7 +56,7 @@ export default function Register() {
 
       {/* RIGHT SIDE — FORM */}
       <div className={styles.rightPanel}>
-        <div className={styles.card}>
+        <div className={`${styles.card} ${styles.fadeIn}`}>
           <h1 className={styles.title}>Create Account</h1>
           <p className={styles.subtitle}>Join us and start tracking</p>
 
@@ -112,13 +119,20 @@ export default function Register() {
             <div className={styles.inputGroup}>
               <input
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={form.password}
                 onChange={handleChange}
                 placeholder=" "
                 required
               />
               <label>Password</label>
+              <button
+                type="button"
+                className={styles.passwordToggle}
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? "👁️" : "👁️‍🗨️"}
+              </button>
             </div>
 
             <button type="submit" className={styles.registerBtn}>

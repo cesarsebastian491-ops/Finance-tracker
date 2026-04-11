@@ -62,6 +62,22 @@ export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
         setErrors({});
     }, [editData, open]);
 
+    // Prevent body scroll when modal is open
+    useEffect(() => {
+        if (open) {
+            const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+            document.body.style.overflow = 'hidden';
+            document.body.style.paddingRight = scrollbarWidth + 'px';
+        } else {
+            document.body.style.overflow = 'auto';
+            document.body.style.paddingRight = '0px';
+        }
+        return () => {
+            document.body.style.overflow = 'auto';
+            document.body.style.paddingRight = '0px';
+        };
+    }, [open]);
+
     if (!open) return null;
 
     function sanitize(value) {
@@ -130,8 +146,8 @@ export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
     }
 
     return (
-        <div className={styles.incomemodalOverlay}>
-            <div className={styles.modal}>
+        <div className={styles.incomemodalOverlay} onClick={onClose}>
+            <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
                 <h2>{editData ? "Edit Income" : "Add Income"}</h2>
 
                 <form onSubmit={handleSubmit}>
@@ -226,7 +242,7 @@ export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
 
             {/* ADDITIONAL AMOUNTS MODAL */}
             {showChargesModal && (
-                <div className={styles.subModalOverlay}>
+                <div className={styles.subModalOverlay} onClick={(e) => e.stopPropagation()}>
                     <div className={styles.subModal}>
                         <h3>Additional Amounts</h3>
 
@@ -261,7 +277,7 @@ export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
 
             {/* RECURRING MODAL */}
             {showRecurringModal && (
-                <div className={styles.subModalOverlay}>
+                <div className={styles.subModalOverlay} onClick={(e) => e.stopPropagation()}>
                     <div className={styles.subModal}>
                         <h3>Recurring Options</h3>
 

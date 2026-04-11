@@ -1,5 +1,4 @@
-GLOBAL RESET
-html,
+GLOBAL RESET html,
 body {
   width: 100%;
   height: 100%;
@@ -49,6 +48,7 @@ body {
 .red {
   color: var(--color-expense);
 }
+
 /* BOARD */
 .board {
   width: 100%;
@@ -79,8 +79,8 @@ body {
   border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 12px;
-  height: 100%;
-  min-height: 100%;
+  height: 596px;
+  /* min-height: 100%; */
   color: var(--text-light);
 }
 
@@ -127,7 +127,7 @@ body {
 }
 
 .logo {
-  color: var(--color-primary);
+  color: var(--color-secondary);
   font-size: 1.6rem;
   font-weight: 700;
   padding: 12px 0;
@@ -136,7 +136,7 @@ body {
 
 .menu {
   background-color: var(--color-neutral);
-  color: #1F1F1F;
+  color: var(--color-tertiary);
   padding: 12px;
   border-radius: 10px;
   /* border: 1px solid #E4E4E2; */
@@ -165,10 +165,11 @@ body {
   background: var(--color-primary-light);
   color: var(--text-light);
 }
+
 .nav-item.active {
-  background: var(  --color-secondary);
+  background: var(--color-primary);
   color: var(--text-light);
-  
+
 }
 
 /* MAIN CONTENT */
@@ -202,14 +203,13 @@ body {
    ============================ */
 .topbar {
   width: 100%;
-  height: 64px;
+  height: 60px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 24px;
-  background: var(--color-secondary);
-  color: #333;
-  border-bottom: 1px solid #e5e5e5;
+  background: var(--color-primary);
+  /* border-bottom: 1px solid var(--border-color); */
   position: fixed;
   top: 0;
   left: 0;
@@ -238,7 +238,7 @@ body {
 /* Prevent welcome text from stretching topbar */
 .topbar-left div:nth-child(3) {
   font-size: 14px;
-  color:var(--text-light);
+  color: var(--text-light);
   line-height: 1;
 }
 
@@ -382,6 +382,7 @@ body {
     opacity: 0;
     transform: scale(0.96) translateY(-6px);
   }
+
   100% {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -402,7 +403,7 @@ body {
 .profile-avatar {
   width: 52px;
   height: 52px;
-  background: var(--color-primary);
+  background: var(--color-secondary);
   color: var(--text-light);
   border-radius: 50%;
   display: flex;
@@ -412,6 +413,7 @@ body {
   font-weight: 700;
   font-family: var(--font-headline);
 }
+
 
 .profile-header h3 {
   margin: 0;
@@ -442,7 +444,7 @@ body {
 .profile-action-btn {
   width: 100%;
   padding: 10px;
-  background: var(--color-secondary);
+  background: var(--color-primary);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 14px;
@@ -462,9 +464,10 @@ body {
 .profile-action-btn {
   text-decoration: none;
 }
+
 /* BUTTONS */
 .button {
-  background-color: var(--color-primary-light);
+  background-color: var(--color-secondary);
   color: var(--text-light);
   border: 1px solid var(--border-color);
   padding: 10px 16px;
@@ -476,8 +479,10 @@ body {
 }
 
 .button:hover {
-  background-color: var(--color-primary);
+  background-color: var(--color-secondary-dark);
   color: var(--text-light);
+  border: 1px solid var(--border-color);
+
 }
 
 .add-btn {

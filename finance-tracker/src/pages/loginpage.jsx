@@ -7,6 +7,7 @@ export default function Login() {
     const [step, setStep] = useState("login");
     const [tempUserId, setTempUserId] = useState(null);
     const [code, setCode] = useState("");
+    const [isExiting, setIsExiting] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -21,6 +22,8 @@ export default function Login() {
     }, []);
 
     const [form, setForm] = useState({ email: "", password: "" });
+    const [showPassword, setShowPassword] = useState(false);
+    const [show2FACode, setShow2FACode] = useState(false);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -53,9 +56,12 @@ export default function Login() {
                 })
             );
 
-            if (data.user.role === "admin") navigate("/admin");
-            else if (data.user.role === "staff") navigate("/staff");
-            else navigate("/user/dashboard");
+            setIsExiting(true);
+            setTimeout(() => {
+                if (data.user.role === "admin") navigate("/admin");
+                else if (data.user.role === "staff") navigate("/staff");
+                else navigate("/user/dashboard");
+            }, 600);
         } else {
             localStorage.removeItem("user");
             alert("Invalid email or password");
@@ -84,19 +90,22 @@ export default function Login() {
             })
         );
 
-        if (data.user.role === "admin") navigate("/admin");
-        else if (data.user.role === "staff") navigate("/staff");
-        else navigate("/user/dashboard");
+        setIsExiting(true);
+        setTimeout(() => {
+            if (data.user.role === "admin") navigate("/admin");
+            else if (data.user.role === "staff") navigate("/staff");
+            else navigate("/user/dashboard");
+        }, 600);
     };
 
     return (
-        <div className={styles.loginPage}>
+        <div className={`${styles.loginPage} ${isExiting ? styles.exitLeft : ""}`}>
             {/* LEFT SIDE — LOGIN CARD */}
             <div className={styles.leftPanel}>
-                <div className={styles.card}>
+                <div className={`${styles.card} ${styles.fadeIn}`}>
 
                     {step === "login" && (
-                        <>
+                        <div className={styles.stepContent}>
                             <h1 className={styles.title}>Welcome back.</h1>
                             <p className={styles.subtitle}>
                                 Enter your credentials to access your dashboard.
@@ -117,40 +126,51 @@ export default function Login() {
                                 <div className={styles.inputGroup}>
                                     <input
                                         name="password"
-                                        type="password"
+                                        type={showPassword ? "text" : "password"}
                                         value={form.password}
                                         onChange={handleChange}
                                         required
                                         placeholder=" "
                                     />
                                     <label>Password</label>
+                                    <button
+                                        type="button"
+                                        className={styles.passwordToggle}
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? "👁️" : "👁️‍🗨️"}
+                                    </button>
                                 </div>
 
                                 <div className={styles.rowBetween}>
                                     <label className={styles.remember}>
                                         <input type="checkbox" /> Remember me
                                     </label>
-                                    <button type="button" className={styles.linkBtn}>
+                                    <button 
+                                        type="button" 
+                                        className={styles.linkBtn}
+                                        onClick={() => navigate("/forgot-password")}
+                                    >
                                         Forgot Password
                                     </button>
                                 </div>
 
                                 <button type="submit" className={styles.loginBtn}>
-                                    Login →
+                                    Login
                                 </button>
                             </form>
 
                             <div className={styles.registerSection}>
-                                <p>Don’t have an account?</p>
+                                <p>Don't have an account?</p>
                                 <Link to="/register" className={styles.registerLink}>
                                     Create one
                                 </Link>
                             </div>
-                        </>
+                        </div>
                     )}
 
                     {step === "2fa" && (
-                        <>
+                        <div className={`${styles.stepContent} ${styles.slideIn}`}>
                             <h1 className={styles.title}>Two‑Factor Authentication</h1>
                             <p className={styles.subtitle}>Enter the 6‑digit code</p>
 
@@ -170,14 +190,14 @@ export default function Login() {
                             <button className={styles.backBtn} onClick={() => setStep("login")}>
                                 Back
                             </button>
-                        </>
+                        </div>
                     )}
 
                 </div>
             </div>
 
             {/* RIGHT SIDE — IMAGE PANEL */}
-            <div className={styles.rightPanel}>
+            <div className={`${styles.rightPanel} ${isExiting ? styles.exitRight : ""}`}>
                 <div className={styles.overlayText}>
                     <h2>VAULT</h2>
                     <p>Track Smarter. Live Better.</p>
