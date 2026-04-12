@@ -67,11 +67,19 @@ export class TransactionsController {
   // INCOME ROUTES
   @Post('add-income')
   addIncome(@Body() dto) {
+    // ⭐ Convert boolean → tinyint for MySQL
+    dto.isRecurring = dto.isRecurring ? 1 : 0;
+
     return this.service.addIncome(dto);
   }
 
   @Put('update-income/:id')
   updateIncome(@Param('id') id: number, @Body() dto) {
+    // ⭐ Convert boolean → tinyint for MySQL
+    if (dto.isRecurring !== undefined) {
+      dto.isRecurring = dto.isRecurring ? 1 : 0;
+    }
+
     return this.service.updateIncome(id, dto);
   }
 

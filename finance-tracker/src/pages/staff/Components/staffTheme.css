@@ -3,4 +3,10 @@
   --staff-color-light: #fef3c7;
   --staff-text-dark: #111827;
   --staff-text-light: #6b7280;
+
+  /* aliases used by transaction/layout CSS */
+  --staff-text: #111827;
+  --staff-bg-light: #ffffff;
+  --staff-bg-hover: #fef9ee;
+  --staff-border: #e5e7eb;
 }

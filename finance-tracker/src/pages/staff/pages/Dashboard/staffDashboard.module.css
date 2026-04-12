@@ -188,3 +188,47 @@
     transform: translateY(0);
   }
 }
+
+/* Category breakdown row (2 cols only) */
+.catRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 14px;
+  color: var(--staff-text-dark);
+}
+
+/* Table header row */
+.tableHeader {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  padding: 6px 0 8px;
+  border-bottom: 2px solid #e5e7eb;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.incomeType {
+  color: #16a34a;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.expenseType {
+  color: #dc2626;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.logMsg {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+  font-size: 13px;
+  color: #6b7280;
+}

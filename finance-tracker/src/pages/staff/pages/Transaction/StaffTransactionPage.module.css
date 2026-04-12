@@ -1,5 +1,5 @@
 .page {
-  color: var(--staff-text);
+  color: var(--staff-text-dark);
 }
 
 
@@ -21,14 +21,14 @@
   padding: 10px 18px;
   border-radius: 8px;
   text-decoration: none;
-  background: var(--staff-bg-light);
-  color: var(--staff-text);
+  background: #f3f4f6;
+  color: #374151;
   font-weight: 500;
   transition: 0.2s ease;
 }
 
 .tabs a:hover {
-  background: var(--staff-bg-hover);
+  background: #fef9ee;
 }
 
 .tabs a.active {

@@ -1,6 +1,25 @@
 import React, { useState } from "react";
 import styles from "./DateFilterMenu.module.css";
 
+function toLocalDateKey(value) {
+    if (!value) return "";
+
+    if (typeof value === "string") {
+        const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (match) {
+            return `${match[1]}-${match[2]}-${match[3]}`;
+        }
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
 export default function DateFilterMenu({ data, onApply }) {
     const [open, setOpen] = useState(false);
     const [filterType, setFilterType] = useState("all");
@@ -32,21 +51,21 @@ export default function DateFilterMenu({ data, onApply }) {
 
         if (filterType === "specific" && specificDate) {
             filtered = data.filter(t => {
-                const d = new Date(t.date);
-                const target = new Date(specificDate);
-
-                return (
-                    d.getFullYear() === target.getFullYear() &&
-                    d.getMonth() === target.getMonth() &&
-                    d.getDate() === target.getDate()
-                );
+                return toLocalDateKey(t.date) === toLocalDateKey(specificDate);
             });
         }
 
         if (filterType === "custom" && customStart && customEnd) {
             filtered = data.filter(t => {
                 const d = new Date(t.date);
-                return d >= new Date(customStart) && d <= new Date(customEnd);
+
+                const start = new Date(customStart);
+                start.setHours(0, 0, 0, 0);
+
+                const end = new Date(customEnd);
+                end.setHours(23, 59, 59, 999);
+
+                return d >= start && d <= end;
             });
         }
 

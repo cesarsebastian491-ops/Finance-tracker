@@ -185,6 +185,13 @@
     animation: fadeInMini 0.2s ease;
 }
 
+.rowTwoButtons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
 @keyframes fadeInMini {
     from { opacity: 0; }
     to { opacity: 1; }

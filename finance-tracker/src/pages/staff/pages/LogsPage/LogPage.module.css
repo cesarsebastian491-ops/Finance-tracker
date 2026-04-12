@@ -1,0 +1,175 @@
+.container {
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--staff-text-dark);
+  margin: 0;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.searchInput,
+.select,
+.dateInput {
+  padding: 0.55rem 0.9rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: #fafafa;
+  color: #202020;
+  outline: none;
+  transition: border 0.2s;
+}
+
+.searchInput:focus,
+.select:focus,
+.dateInput:focus {
+  border-color: var(--staff-color);
+}
+
+.searchInput {
+  width: 220px;
+}
+
+.count {
+  font-size: 0.85rem;
+  color: var(--staff-text-light);
+  margin-left: auto;
+}
+
+.tableWrapper {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.tableWrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.table th {
+  position: sticky;
+  top: 0;
+  background: #f9fafb;
+  padding: 0.85rem 1rem;
+  text-align: left;
+  font-size: 0.82rem;
+  color: #4b5563;
+  font-weight: 600;
+  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+  user-select: none;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.table th:hover {
+  background: #f3f4f6;
+}
+
+.table td {
+  padding: 0.8rem 1rem;
+  font-size: 0.9rem;
+  color: #111827;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* Action row colors */
+.action_ADD_EXPENSE,
+.action_ADD_INCOME {
+  background: #f0fdf4;
+}
+
+.action_EDIT_EXPENSE,
+.action_EDIT_INCOME {
+  background: #eff6ff;
+}
+
+.action_DELETE_EXPENSE,
+.action_DELETE_INCOME {
+  background: #fef2f2;
+}
+
+.action_LOGIN {
+  background: #fefce8;
+}
+
+.action_LOGOUT {
+  background: #fff7ed;
+}
+
+.action_FAILED_LOGIN {
+  background: #fff1f2;
+}
+
+/* Action badges */
+.actionBadge {
+  padding: 0.2rem 0.55rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge_ADD_INCOME,
+.badge_ADD_EXPENSE {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.badge_EDIT_INCOME,
+.badge_EDIT_EXPENSE {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.badge_DELETE_INCOME,
+.badge_DELETE_EXPENSE {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.badge_LOGIN {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.badge_LOGOUT {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.badge_FAILED_LOGIN {
+  background: #ffe4e6;
+  color: #9f1239;
+}
+
+.empty {
+  text-align: center;
+  color: #9ca3af;
+  padding: 2rem;
+}

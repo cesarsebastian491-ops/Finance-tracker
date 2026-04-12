@@ -4,6 +4,26 @@ import styles from "./transaction.module.css";
 import { API_URL } from "../../../config";
 
 
+function toLocalDateKey(value) {
+    if (!value) return "";
+
+    if (typeof value === "string") {
+        const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (match) {
+            return `${match[1]}-${match[2]}-${match[3]}`;
+        }
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
+
 
 export default function RunningBalancePage() {
 
@@ -14,6 +34,7 @@ export default function RunningBalancePage() {
     const [user, setUser] = useState(null);
     const [transactions, setTransactions] = useState([]);
     const [openFilter, setOpenFilter] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
     const tableRef = useRef();
 
     // ⭐ FILTER STATE
@@ -40,23 +61,33 @@ export default function RunningBalancePage() {
 
         // TIME FILTER
         if (activeFilter.time === "7days") {
-            const cutoff = new Date(now.setDate(now.getDate() - 7));
+            const cutoff = new Date(now);
+            cutoff.setDate(cutoff.getDate() - 7);
             if (d < cutoff) return false;
         }
 
         if (activeFilter.time === "1month") {
-            const cutoff = new Date(now.setMonth(now.getMonth() - 1));
+            const cutoff = new Date(now);
+            cutoff.setMonth(cutoff.getMonth() - 1);
             if (d < cutoff) return false;
         }
 
         if (activeFilter.time === "1year") {
-            const cutoff = new Date(now.setFullYear(now.getFullYear() - 1));
+            const cutoff = new Date(now);
+            cutoff.setFullYear(cutoff.getFullYear() - 1);
             if (d < cutoff) return false;
         }
 
         if (activeFilter.time === "custom") {
             if (!activeFilter.customStart || !activeFilter.customEnd) return false;
-            if (d < new Date(activeFilter.customStart) || d > new Date(activeFilter.customEnd)) {
+
+            const start = new Date(activeFilter.customStart);
+            start.setHours(0, 0, 0, 0);
+
+            const end = new Date(activeFilter.customEnd);
+            end.setHours(23, 59, 59, 999);
+
+            if (d < start || d > end) {
                 return false;
             }
         }
@@ -64,13 +95,7 @@ export default function RunningBalancePage() {
         if (activeFilter.time === "specific") {
             if (!activeFilter.customStart) return false;
 
-            const selected = new Date(activeFilter.customStart);
-
-            if (
-                d.getFullYear() !== selected.getFullYear() ||
-                d.getMonth() !== selected.getMonth() ||
-                d.getDate() !== selected.getDate()
-            ) {
+            if (toLocalDateKey(d) !== toLocalDateKey(activeFilter.customStart)) {
                 return false;
             }
         }
@@ -109,6 +134,19 @@ export default function RunningBalancePage() {
         sortOrder === "desc"
             ? [...runningAsc].reverse()
             : runningAsc;
+
+    const visibleRunningList = runningList.filter((tx) => {
+        const term = searchTerm.toLowerCase().trim();
+        if (!term) return true;
+
+        return (
+            (tx.type === "income" ? tx.source : tx.category)?.toLowerCase().includes(term) ||
+            tx.type?.toLowerCase().includes(term) ||
+            formatDate(tx.date).toLowerCase().includes(term) ||
+            formatMoney(tx.amount).toLowerCase().includes(term) ||
+            formatMoney(tx.runningBalance).toLowerCase().includes(term)
+        );
+    });
 
 
     useEffect(() => {
@@ -217,7 +255,12 @@ export default function RunningBalancePage() {
 
                     <div className="top-row">
                         <div className="search-wrap">
-                            <input className="search" placeholder="Search month" />
+                            <input
+                                className="search"
+                                placeholder="Search transactions..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
                         </div>
 
                         <div className="actions">
@@ -232,7 +275,7 @@ export default function RunningBalancePage() {
 
                             {/* <CurrencyPopup /> */}
 
-                            <button className="button" onClick={() => exportToCSV("running_balance.csv", runningList)}>
+                            <button className="button" onClick={() => exportToCSV("running_balance.csv", visibleRunningList)}>
                                 Export CSV
                             </button>
 
@@ -260,14 +303,14 @@ export default function RunningBalancePage() {
                                     </thead>
 
                                     <tbody>
-                                        {runningList.length === 0 ? (
+                                        {visibleRunningList.length === 0 ? (
                                             <tr>
                                                 <td colSpan="5" className={styles.txEmpty}>
                                                     No transactions found
                                                 </td>
                                             </tr>
                                         ) : (
-                                            runningList.map((tx) => (
+                                            visibleRunningList.map((tx) => (
                                                 <tr key={tx.id}>
                                                     <td>{formatDate(tx.date)}</td>
                                                     <td>{tx.type === "income" ? tx.source : tx.category}</td>

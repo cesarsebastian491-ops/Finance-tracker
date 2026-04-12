@@ -54,7 +54,8 @@ export default function expenseDBoard() {
         }
     }
     async function handleDelete(expense) {
-        if (!confirm(`Delete ${expense.expense}?`)) return;
+        const label = expense.expense || expense.category || "this expense";
+        if (!confirm(`Delete ${label}?`)) return;
 
         try {
             await fetch(
@@ -62,7 +63,8 @@ export default function expenseDBoard() {
                 { method: "DELETE" }
             );
 
-            loadData(); // refresh table
+            setSelectedExpense(null);
+            await loadData();
         } catch (err) {
             console.error("Error deleting expense:", err);
         }
@@ -122,12 +124,13 @@ export default function expenseDBoard() {
     const [expenseFilter, setExpenseFilter] = useState({
         filterType: "all",
         customStart: null,
-        customEnd: null
+        customEnd: null,
+        specificDate: null
     });
 
-    function handleExpenseFilter({ filtered, filterType, customStart, customEnd }) {
+    function handleExpenseFilter({ filtered, filterType, customStart, customEnd, specificDate }) {
         setFilteredExpenses(filtered);
-        setExpenseFilter({ filterType, customStart, customEnd });
+        setExpenseFilter({ filterType, customStart, customEnd, specificDate });
     }
 
     function getFilterLabel() {
@@ -138,6 +141,10 @@ export default function expenseDBoard() {
                 return "Last 30 Days";
             case "1year":
                 return "This Year";
+            case "specific":
+                return expenseFilter.specificDate
+                    ? formatDate(expenseFilter.specificDate)
+                    : "Specific Date";
             case "custom":
                 return `${formatDate(expenseFilter.customStart)} → ${formatDate(expenseFilter.customEnd)}`;
             default:
@@ -257,7 +264,7 @@ export default function expenseDBoard() {
             formatDate(exp.date),
             exp.category || "—",
             formatMoney(exp.amount),
-            exp.isRecurring ? "Yes" : "No"
+            exp.isRecurring ? "Yes" : ""
         ]);
 
         const csvContent =
@@ -281,26 +288,6 @@ export default function expenseDBoard() {
     }
 
 
-    function getNextRecurringDate(tx) {
-        if (!tx.isRecurring) return null;
-
-        const last = tx.lastGenerated || tx.date;
-
-        const base = dayjs(last);
-
-        switch (tx.recurringType) {
-            case "daily":
-                return base.add(1, "day").format("MMM DD, YYYY");
-            case "weekly":
-                return base.add(1, "week").format("MMM DD, YYYY");
-            case "monthly":
-                return base.add(1, "month").format("MMM DD, YYYY");
-            case "yearly":
-                return base.add(1, "year").format("MMM DD, YYYY");
-            default:
-                return null;
-        }
-    }
     return (
 
 
@@ -342,7 +329,7 @@ export default function expenseDBoard() {
                         </div>
 
                         <div className="row action-row">
-                            <button className="button" onClick={() => exportExpensesToCSV("expenses.csv", expenseList)}>
+                            <button className="button" onClick={() => exportExpensesToCSV("expenses.csv", finalExpenseList)}>
                                 Export CSV
                             </button>
 
@@ -363,7 +350,9 @@ export default function expenseDBoard() {
                             </div> */}
 
                             <div className={styles.txTableWrapper} ref={tableRef}>
-                                <table className={styles.txTable}>
+                                <div id="print-area">
+                                    {/* <h2 style={{marginBottom: '20px'}}>Expense Report</h2> */}
+                                    <table className={styles.txTable}>
                                     <thead>
                                         <tr>
                                             <th>Expense</th>
@@ -393,13 +382,14 @@ export default function expenseDBoard() {
                                                     <td>{formatDate(exp.date)}</td>
                                                     <td className={styles.expenseAmount}>{formatMoney(exp.amount)}</td>
                                                     <td className={exp.isRecurring ? styles.recurringYes : styles.recurringNo}>
-                                                        {exp.isRecurring ? "Yes" : "No"}
+                                                        {exp.isRecurring ? "Yes" : ""}
                                                     </td>
                                                 </tr>
                                             ))
                                         )}
                                     </tbody>
                                 </table>
+                                </div>
                             </div>
                         </section>
 
@@ -498,13 +488,14 @@ export default function expenseDBoard() {
                         <div className={styles.twoColumnSection}>
 
                             {/* LEFT COLUMN — Additional Charges */}
-                            {(expense.tax > 0 ||
-                                expense.serviceFee > 0 ||
-                                expense.discount > 0 ||
-                                expense.otherCharge > 0) && (
-                                    <div className={styles.column}>
-                                        <h5 className={styles.sectionTitle}>Additional Charges</h5>
+                            <div className={styles.column}>
+                                <h5 className={styles.sectionTitle}>Additional Charges</h5>
 
+                                {(expense.tax > 0 ||
+                                    expense.serviceFee > 0 ||
+                                    expense.discount > 0 ||
+                                    expense.otherCharge > 0) ? (
+                                    <>
                                         {expense.tax > 0 && (
                                             <div className={styles.infoRow}>
                                                 <h6 className={styles.label}>Tax</h6>
@@ -532,27 +523,38 @@ export default function expenseDBoard() {
                                                 <span className={styles.value}>{formatMoney(expense.otherCharge)}</span>
                                             </div>
                                         )}
+                                    </>
+                                ) : (
+                                    <div className={styles.infoRow}>
+                                        <span className={styles.value}>None</span>
                                     </div>
                                 )}
+                            </div>
 
                             {/* RIGHT COLUMN — Recurring */}
-                            {expense.isRecurring && (
-                                <div className={styles.column}>
-                                    <h5 className={styles.sectionTitle}>Recurring</h5>
+                            <div className={styles.column}>
+                                <h5 className={styles.sectionTitle}>Recurring</h5>
 
-                                    <div className={styles.infoRow}>
-                                        <span className={styles.label}>Frequency</span>
-                                        <span className={styles.value}>{expense.recurringType}</span>
-                                    </div>
-
-                                    {expense.recurringEndDate && (
+                                {expense.isRecurring ? (
+                                    <>
                                         <div className={styles.infoRow}>
-                                            <span className={styles.label}>Ends On</span>
-                                            <span className={styles.value}>{formatDate(expense.recurringEndDate)}</span>
+                                            <span className={styles.label}>Frequency</span>
+                                            <span className={styles.value}>{expense.recurringType}</span>
                                         </div>
-                                    )}
-                                </div>
-                            )}
+
+                                        {expense.recurringEndDate && (
+                                            <div className={styles.infoRow}>
+                                                <span className={styles.label}>Ends On</span>
+                                                <span className={styles.value}>{formatDate(expense.recurringEndDate)}</span>
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <div className={styles.infoRow}>
+                                        <span className={styles.value}>None</span>
+                                    </div>
+                                )}
+                            </div>
 
                         </div>
 
@@ -562,7 +564,7 @@ export default function expenseDBoard() {
                     <div className={styles.infoActions}>
                         <div className={styles.actionRow}>
                             <button className={styles.editBtn} onClick={() => { onClose(); onEdit(expense); }}>Edit</button>
-                            <button className={styles.deleteBtn} onClick={() => onDelete(expense.id)}>Delete</button>
+                            <button className={styles.deleteBtn} onClick={() => onDelete(expense)}>Delete</button>
                         </div>
 
                         <button className={styles.closeBtn} onClick={onClose}>Close</button>

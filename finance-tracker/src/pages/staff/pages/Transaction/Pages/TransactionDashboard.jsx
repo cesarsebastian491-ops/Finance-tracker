@@ -2,62 +2,52 @@ import { useEffect, useState } from "react";
 import styles from "./transactionDashboard.module.css";
 import StaffMonthlyPie from "../../../Components/StaffMonthlyPie";
 import { API_URL } from "../../../../../config";
+import "../../../Components/staffTheme.css";
 
 export default function TransactionDashboard() {
     const [summary, setSummary] = useState(null);
     const [recent, setRecent] = useState([]);
     const [categories, setCategories] = useState([]);
-    const token = localStorage.getItem("token");
     const [monthlyData, setMonthlyData] = useState(null);
+    const token = JSON.parse(localStorage.getItem("user"))?.access_token;
 
-    // 1. Summary (total income, total expense, net balance)
     useEffect(() => {
-        async function loadSummary() {
-            const res = await fetch(`${API_URL}/analytics/staff/summary`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            const json = await res.json();
-            setSummary(json);
-        }
-        loadSummary();
-    }, []);
+        async function loadAll() {
+            const headers = { Authorization: `Bearer ${token}` };
 
-    // 2. Recent transactions
-    useEffect(() => {
-        async function loadRecent() {
-            const res = await fetch(`${API_URL}/analytics/staff/recent-transactions`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            const json = await res.json();
-            setRecent(json);
-        }
-        loadRecent();
-    }, []);
+            const [summaryRes, recentRes, catRes] = await Promise.all([
+                fetch(`${API_URL}/analytics/staff/summary`, { headers }),
+                fetch(`${API_URL}/analytics/staff/recent-transactions`, { headers }),
+                fetch(`${API_URL}/analytics/staff/category-breakdown`, { headers }),
+            ]);
 
-    // 3. Category breakdown
-    useEffect(() => {
-        async function loadCategories() {
-            const res = await fetch(`${API_URL}/analytics/transactions`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            const json = await res.json();
-            setCategories(json.categoryBreakdown || []);
+            const [summaryJson, recentJson, catJson] = await Promise.all([
+                summaryRes.json(),
+                recentRes.json(),
+                catRes.json(),
+            ]);
+
+            setSummary(summaryJson);
+            setRecent(Array.isArray(recentJson) ? recentJson : []);
+            setCategories(Array.isArray(catJson) ? catJson : []);
         }
-        loadCategories();
+        loadAll();
     }, []);
 
     if (!summary) return <p>Loading transaction dashboard...</p>;
+
+    const totalForRatio = (monthlyData?.income || 0) + (monthlyData?.expense || 0);
 
     return (
         <div className={styles.dashboard}>
             <h1 className={styles.title}>Transactions Dashboard</h1>
 
-            {/* Summary Cards */}
+            {/* Summary Cards — use staff summary fields */}
             <div className={styles.cardGrid}>
-                <Card label="Total Income" value={summary.totalIncome} />
-                <Card label="Total Expense" value={summary.totalExpense} />
-                <Card label="Net Balance" value={summary.netBalance} />
-                <Card label="Total Transactions" value={summary.totalTransactions} />
+                <Card label="Total Transactions" value={summary.totalTransactions} prefix="" />
+                <Card label="Income This Month" value={summary.thisMonthIncome} prefix="$" />
+                <Card label="Expense This Month" value={summary.thisMonthExpense} prefix="$" />
+                <Card label="Active Users" value={summary.activeUsers} prefix="" />
             </div>
 
             {/* Charts */}
@@ -79,55 +69,27 @@ export default function TransactionDashboard() {
 
                                     <div className={styles.detailRow}>
                                         <span className={styles.incomeDot}></span>
-                                        <p>
-                                            Income: <strong>${monthlyData.income.toLocaleString()}</strong>
-                                        </p>
+                                        <p>Income: <strong>${monthlyData.income.toLocaleString()}</strong></p>
                                     </div>
 
                                     <div className={styles.detailRow}>
                                         <span className={styles.expenseDot}></span>
-                                        <p>
-                                            Expense: <strong>${monthlyData.expense.toLocaleString()}</strong>
-                                        </p>
+                                        <p>Expense: <strong>${monthlyData.expense.toLocaleString()}</strong></p>
                                     </div>
 
                                     <p>
                                         Net Balance:{" "}
-                                        <strong
-                                            style={{
-                                                color:
-                                                    monthlyData.income - monthlyData.expense >= 0
-                                                        ? "green"
-                                                        : "red",
-                                            }}
-                                        >
+                                        <strong style={{ color: monthlyData.income - monthlyData.expense >= 0 ? "green" : "red" }}>
                                             ${(monthlyData.income - monthlyData.expense).toLocaleString()}
                                         </strong>
                                     </p>
 
-                                    <p>
-                                        Income Ratio:{" "}
-                                        <strong>
-                                            {(
-                                                (monthlyData.income /
-                                                    (monthlyData.income + monthlyData.expense)) *
-                                                100
-                                            ).toFixed(1)}
-                                            %
-                                        </strong>
-                                    </p>
-
-                                    <p>
-                                        Expense Ratio:{" "}
-                                        <strong>
-                                            {(
-                                                (monthlyData.expense /
-                                                    (monthlyData.income + monthlyData.expense)) *
-                                                100
-                                            ).toFixed(1)}
-                                            %
-                                        </strong>
-                                    </p>
+                                    {totalForRatio > 0 && (
+                                        <>
+                                            <p>Income Ratio: <strong>{((monthlyData.income / totalForRatio) * 100).toFixed(1)}%</strong></p>
+                                            <p>Expense Ratio: <strong>{((monthlyData.expense / totalForRatio) * 100).toFixed(1)}%</strong></p>
+                                        </>
+                                    )}
                                 </>
                             )}
                         </div>
@@ -135,41 +97,54 @@ export default function TransactionDashboard() {
                 </div>
 
                 <div className={styles.chartBox}>
-                    <h3>Category Breakdown</h3>
-                    {categories.length === 0 && <p>No category data found.</p>}
-                    {categories.map((c) => (
-                        <div key={c.category} className={styles.row}>
-                            <span>{c.category}</span>
-                            <span>${c.amount.toLocaleString()}</span>
-                        </div>
-                    ))}
+                    <h3>Category Breakdown (This Month)</h3>
+                    {categories.length === 0 ? (
+                        <p>No category data found.</p>
+                    ) : (
+                        categories.map((c) => (
+                            <div key={c.category} className={styles.catRow}>
+                                <span>{c.category}</span>
+                                <span>${Number(c.amount).toLocaleString()}</span>
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
 
             {/* Recent Transactions */}
             <div className={styles.tableBox}>
                 <h3>Recent Transactions</h3>
-                {recent.length === 0 && <p>No recent transactions found.</p>}
-                {recent.map((t) => (
-                    <div key={t.id} className={styles.row}>
-                        <span>{t.user?.username}</span>
-                        <span>{t.type}</span>
-                        <span>${t.amount}</span>
-                        <span>{new Date(t.date).toLocaleDateString()}</span>
-                    </div>
-                ))}
+                <div className={styles.tableHeader}>
+                    <span>User</span>
+                    <span>Type</span>
+                    <span>Category</span>
+                    <span>Amount</span>
+                    <span>Date</span>
+                </div>
+                {recent.length === 0 ? (
+                    <p>No recent transactions found.</p>
+                ) : (
+                    recent.map((t) => (
+                        <div key={t.id} className={styles.row}>
+                            <span>{t.user?.username || "—"}</span>
+                            <span className={t.type === "income" ? styles.income : styles.expense}>{t.type}</span>
+                            <span>{t.category || "—"}</span>
+                            <span>${Number(t.amount).toLocaleString()}</span>
+                            <span>{t.date ? new Date(t.date).toLocaleDateString() : "—"}</span>
+                        </div>
+                    ))
+                )}
             </div>
         </div>
     );
 }
 
-function Card({ label, value }) {
-    const safeValue = Number(value) || 0;
-
+function Card({ label, value, prefix = "" }) {
+    const num = Number(value) || 0;
     return (
         <div className={styles.card}>
             <h4>{label}</h4>
-            <p className={styles.cardValue}>{safeValue.toLocaleString()}</p>
+            <p className={styles.cardValue}>{prefix}{num.toLocaleString()}</p>
         </div>
     );
 }

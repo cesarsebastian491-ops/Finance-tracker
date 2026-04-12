@@ -19,22 +19,31 @@ export default function StaffMonthlyPie({ onDataLoaded }) {
 
     useEffect(() => {
         async function load() {
-            const res = await fetch(
-                `${API_URL}/analytics/staff/monthly?month=${month}&year=${year}`,
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            const json = await res.json();
+            try {
+                const res = await fetch(
+                    `${API_URL}/analytics/staff/monthly?month=${month}&year=${year}`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                const json = await res.json();
 
-            const fixed = {
-                income: Number(json.income),
-                expense: Number(json.expense),
-            };
+                const income = Number(json.income) || 0;
+                const expense = Number(json.expense) || 0;
 
-            setData(fixed);
-            onDataLoaded && onDataLoaded(fixed);
+                const fixed = {
+                    income: isNaN(income) ? 0 : income,
+                    expense: isNaN(expense) ? 0 : expense,
+                };
+
+                setData(fixed);
+                onDataLoaded && onDataLoaded(fixed);
+            } catch (err) {
+                console.error("Monthly data load error:", err);
+                setData({ income: 0, expense: 0 });
+                onDataLoaded && onDataLoaded({ income: 0, expense: 0 });
+            }
         }
-        load();
-    }, []);
+        if (token) load();
+    }, [token]);
 
     if (!data) return <p>Loading chart...</p>;
 

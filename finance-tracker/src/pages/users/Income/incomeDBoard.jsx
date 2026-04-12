@@ -138,14 +138,15 @@ export default function IncomeDBoard() {
     const [incomeFilter, setIncomeFilter] = useState({
         filterType: "all",
         customStart: null,
-        customEnd: null
+        customEnd: null,
+        specificDate: null
     });
     const [searchTerm, setSearchTerm] = useState("");   // ✅ Add this
 
     // ⭐ Handler for shared DateFilterMenu
-    function handleIncomeFilter({ filtered, filterType, customStart, customEnd }) {
+    function handleIncomeFilter({ filtered, filterType, customStart, customEnd, specificDate }) {
         setFilteredIncome(filtered);
-        setIncomeFilter({ filterType, customStart, customEnd });
+        setIncomeFilter({ filterType, customStart, customEnd, specificDate });
     }
 
     // ⭐ Filter label (fixed: replaced activeFilter → incomeFilter)
@@ -157,6 +158,10 @@ export default function IncomeDBoard() {
                 return "Last 30 Days";
             case "1year":
                 return "This Year";
+            case "specific":
+                return incomeFilter.specificDate
+                    ? formatDate(incomeFilter.specificDate)
+                    : "Specific Date";
             case "custom":
                 return `${formatDate(incomeFilter.customStart)} → ${formatDate(incomeFilter.customEnd)}`;
             default:
@@ -276,7 +281,7 @@ export default function IncomeDBoard() {
             formatDate(inc.date),
             inc.source || "—",
             formatMoney(inc.amount),
-            inc.isRecurring ? "Yes" : "No"
+            inc.isRecurring ? "Yes" : ""
         ]);
 
         const csvContent =
@@ -314,7 +319,7 @@ export default function IncomeDBoard() {
                                 <input
                                     type="text"
                                     className="search"
-                                    placeholder="Search expense..."
+                                    placeholder="Search revenue..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
@@ -357,7 +362,9 @@ export default function IncomeDBoard() {
                             </div> */}
 
                             <div className={styles.txTableWrapper} ref={tableRef}>
-                                <table className={styles.txTable}>
+                                <div id="print-area">
+                                    {/* <h2 style={{marginBottom: '20px'}}>Revenue Report</h2> */}
+                                    <table className={styles.txTable}>
                                     <thead>
                                         <tr>
                                             <th>Source</th>
@@ -385,13 +392,14 @@ export default function IncomeDBoard() {
                                                     <td>{formatDate(inc.date)}</td>
                                                     <td className={styles.incomeAmount}>{formatMoney(inc.amount)}</td>
                                                     <td className={inc.isRecurring ? styles.recurringYes : styles.recurringNo}>
-                                                        {inc.isRecurring ? "Yes" : "No"}
+                                                        {inc.isRecurring ? "Yes" : ""}
                                                     </td>
                                                 </tr>
                                             ))
                                         )}
                                     </tbody>
                                 </table>
+                                </div>
                             </div>
                         </section>
 
@@ -482,13 +490,14 @@ export default function IncomeDBoard() {
                         <div className={styles.twoColumnSection}>
 
                             {/* LEFT COLUMN — Additional Charges */}
-                            {(income.tax > 0 ||
-                                income.serviceFee > 0 ||
-                                income.discount > 0 ||
-                                income.otherCharge > 0) && (
-                                    <div className={styles.column}>
-                                        <h5 className={styles.sectionTitle}>Additional Charges</h5>
+                            <div className={styles.column}>
+                                <h5 className={styles.sectionTitle}>Additional Charges</h5>
 
+                                {(income.tax > 0 ||
+                                    income.serviceFee > 0 ||
+                                    income.discount > 0 ||
+                                    income.otherCharge > 0) ? (
+                                    <>
                                         {income.tax > 0 && (
                                             <div className={styles.infoRow}>
                                                 <h6 className={styles.label}>Tax</h6>
@@ -516,27 +525,38 @@ export default function IncomeDBoard() {
                                                 <span className={styles.value}>{formatMoney(income.otherCharge)}</span>
                                             </div>
                                         )}
+                                    </>
+                                ) : (
+                                    <div className={styles.infoRow}>
+                                        <span className={styles.value}>None</span>
                                     </div>
                                 )}
+                            </div>
 
                             {/* RIGHT COLUMN — Recurring */}
-                            {income.isRecurring && (
-                                <div className={styles.column}>
-                                    <h5 className={styles.sectionTitle}>Recurring</h5>
+                            <div className={styles.column}>
+                                <h5 className={styles.sectionTitle}>Recurring</h5>
 
-                                    <div className={styles.infoRow}>
-                                        <span className={styles.label}>Frequency</span>
-                                        <span className={styles.value}>{income.recurringType}</span>
-                                    </div>
-
-                                    {income.recurringEndDate && (
+                                {income.isRecurring ? (
+                                    <>
                                         <div className={styles.infoRow}>
-                                            <span className={styles.label}>Ends On</span>
-                                            <span className={styles.value}>{formatDate(income.recurringEndDate)}</span>
+                                            <span className={styles.label}>Frequency</span>
+                                            <span className={styles.value}>{income.recurringType}</span>
                                         </div>
-                                    )}
-                                </div>
-                            )}
+
+                                        {income.recurringEndDate && (
+                                            <div className={styles.infoRow}>
+                                                <span className={styles.label}>Ends On</span>
+                                                <span className={styles.value}>{formatDate(income.recurringEndDate)}</span>
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <div className={styles.infoRow}>
+                                        <span className={styles.value}>None</span>
+                                    </div>
+                                )}
+                            </div>
 
                         </div>
 

@@ -5,8 +5,6 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { LogsController } from './logs/logs.controller';
 import { LogsModule } from './logs/logs.module';
-// import { APP_GUARD } from '@nestjs/core';
-// import { RolesGuard } from './auth/roles.guard';
 import { AdminModule } from './admin/admin.module';
 import { SystemSettingsModule } from './system-settings/system-settings.module';
 import { SessionsModule } from './sessions/sessions.module';
@@ -17,21 +15,20 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { LastActiveInterceptor } from './auth/last-active.interceptor';
 import { ScheduleModule } from '@nestjs/schedule';
 
-
-
-
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: 'localhost',
-      port: 3306,
-      username: 'root',
-      password: '1234',
-      database: 'finance-system',
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || '3306', 10),
+      username: process.env.DB_USERNAME || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'finance-system',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true,
+      synchronize: process.env.NODE_ENV !== 'production' && process.env.DB_SYNCHRONIZE === 'true',
+      logging: process.env.NODE_ENV !== 'production',
     }),
+
     TransactionsModule,
     UsersModule,
     AuthModule,
@@ -42,22 +39,14 @@ import { ScheduleModule } from '@nestjs/schedule';
     MaintenanceModule,
     AnalyticsModule,
     SystemModule,
-      ScheduleModule.forRoot(),
-
-
-
-
-
+    ScheduleModule.forRoot(),
   ],
   controllers: [LogsController],
   providers: [
     {
       provide: APP_INTERCEPTOR,
       useClass: LastActiveInterceptor,
-      
     },
   ],
-
-
 })
 export class AppModule { }

@@ -18,32 +18,51 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 // ✅ STEP 2 GOES RIGHT HERE — OUTSIDE THE COMPONENT
 function getDailyTotals(transactions) {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    const days = Array(daysInMonth).fill(0).map(() => ({
-        income: 0,
-        expense: 0
-    }));
+    const totalsByDay = new Map();
 
     transactions.forEach((t) => {
         const date = new Date(t.date);
-        if (date.getMonth() !== month) return;
+        if (Number.isNaN(date.getTime())) return;
 
-        const day = date.getDate() - 1;
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        const key = `${year}-${month}-${day}`;
+
+        if (!totalsByDay.has(key)) {
+            totalsByDay.set(key, {
+                key,
+                income: 0,
+                expense: 0
+            });
+        }
+
+        const totals = totalsByDay.get(key);
 
         if (t.type === "income") {
-            days[day].income += Number(t.amount);
+            totals.income += Number(t.amount) || 0;
         } else if (t.type === "expense") {
-            days[day].expense += Number(t.amount);
+            totals.expense += Number(t.amount) || 0;
         }
     });
 
-    return days;
+    return [...totalsByDay.values()].sort((a, b) => a.key.localeCompare(b.key));
 }
+
+function formatDateKey(dateKey) {
+    const [year, month, day] = dateKey.split("-").map(Number);
+    const date = new Date(year, month - 1, day);
+
+    return date
+        .toLocaleDateString("en-US", {
+            month: "short",
+            day: "2-digit",
+            year: "numeric"
+        })
+        .replace(",", "")
+        .replace(" ", "/");
+}
+
 function filterCurrentMonth(transactions) {
     const now = new Date();
     const month = now.getMonth();
@@ -60,21 +79,22 @@ export default function overviewDBoard() {
     const [user, setUser] = useState(null);
     const [transactions, setTransactions] = useState([]);
     const { mainCurrency } = useContext(CurrencyContext);
-    const [filteredTransactions, setFilteredTransactions] = useState([]);
+    const [filteredTransactions, setFilteredTransactions] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [sortOrder, setSortOrder] = useState("desc"); // "desc" = Latest first
     const tableRef = useRef(null);
 
 
-    function handleFilter({ filtered, filterType, customStart, customEnd }) {
-        setFilteredTransactions(filtered);
-        setActiveFilter({ filterType, customStart, customEnd });
+    function handleFilter({ filtered, filterType, customStart, customEnd, specificDate }) {
+        setFilteredTransactions(Array.isArray(filtered) ? filtered : []);
+        setActiveFilter({ filterType, customStart, customEnd, specificDate });
     }
 
     const [activeFilter, setActiveFilter] = useState({
         filterType: "monthly",
         customStart: null,
-        customEnd: null
+        customEnd: null,
+        specificDate: null
     });
 
     function getFilterLabel() {
@@ -85,6 +105,10 @@ export default function overviewDBoard() {
                 return "Last 30 Days";
             case "1year":
                 return "This Year";
+            case "specific":
+                return activeFilter.specificDate
+                    ? formatDate(activeFilter.specificDate)
+                    : "Specific Date";
             case "custom":
                 return `${formatDate(activeFilter.customStart)} → ${formatDate(activeFilter.customEnd)}`;
             default:
@@ -121,9 +145,7 @@ export default function overviewDBoard() {
     // total money calculations
     const currentMonthTransactions = filterCurrentMonth(transactions);
 
-    const dataToUse = filteredTransactions.length > 0
-        ? filteredTransactions
-        : currentMonthTransactions;
+    const dataToUse = filteredTransactions ?? currentMonthTransactions;
 
     const totalIncome = dataToUse
         .filter(t => t.type === "income")
@@ -158,22 +180,23 @@ export default function overviewDBoard() {
             .replace(",", "")
             .replace(" ", "/");
     }
-    // chart data preparation
-    const daily = getDailyTotals(currentMonthTransactions);
 
-    const labels = daily.map((_, i) => i + 1);
+    // chart data preparation
+    const daily = getDailyTotals(dataToUse);
+
+    const labels = daily.map((entry) => formatDateKey(entry.key));
 
     const data = {
         labels,
         datasets: [
             {
                 label: "Income",
-                data: daily.map(d => d.income),   // positive
+                data: daily.map(d => d.income),
                 backgroundColor: "#8dd5ac",
             },
             {
                 label: "Expense",
-                data: daily.map(d => -Math.abs(d.expense)),  // negative
+                data: daily.map(d => -Math.abs(d.expense)),
                 backgroundColor: "#ff6b6b",
             },
         ],
@@ -197,9 +220,7 @@ export default function overviewDBoard() {
     };
 
     const baseList =
-        filteredTransactions.length > 0
-            ? filteredTransactions
-            : currentMonthTransactions;
+        filteredTransactions ?? currentMonthTransactions;
 
     const searchFiltered = baseList.filter((tx) => {
         const term = searchTerm.toLowerCase().trim();
@@ -286,8 +307,8 @@ export default function overviewDBoard() {
                             >
                                 Sort: {sortOrder === "desc" ? "Latest ↓" : "Oldest ↑"}
                             </button>
-                            <button className="button">Export CSV</button>
-                            <button className="button">Print</button>
+                            {/* <button className="button">Export CSV</button>
+                            <button className="button">Print</button> */}
                         </div>
 
                     </div>
@@ -310,7 +331,9 @@ export default function overviewDBoard() {
 
                             <div className={styles.card}>
                                 Net Balance ({getFilterLabel()})
-                                <div className={styles.value}>{formatMoney(netBalance)}</div>
+                                <div className={`${styles.value} ${netBalance < 0 ? styles.negativeValue : ""}`}>
+                                    {formatMoney(netBalance)}
+                                </div>
                             </div>
 
                         </div>
@@ -373,11 +396,11 @@ export default function overviewDBoard() {
 
                         <section className={styles.report}>
                             <div className={styles.txHeader}>
-                                <h3>Monthly Report</h3>
+                                <h3>Report</h3>
                             </div>
 
                             <div className={styles.txList}>
-                                <h3>Monthly Income vs Expense</h3>
+                                <h3>{getFilterLabel()} Income vs Expense</h3>
                                 <Bar data={data} options={options} />
                             </div>
                         </section>

@@ -14,7 +14,7 @@ export default function AllTransactions() {
 
     const [categories, setCategories] = useState([]);
 
-    const token = localStorage.getItem("token");
+    const token = JSON.parse(localStorage.getItem("user"))?.access_token;
 
     // Fetch all staff transactions
     useEffect(() => {

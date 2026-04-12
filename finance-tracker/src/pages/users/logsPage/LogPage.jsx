@@ -1,7 +1,26 @@
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState } from "react";
 import UniversalFilterModal from "../../../components/universalfilter/universalFilterModal";
 import styles from "./LogPage.module.css";
 import { API_URL } from "../../../config";
+
+function toLocalDateKey(value) {
+    if (!value) return "";
+
+    if (typeof value === "string") {
+        const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (match) {
+            return `${match[1]}-${match[2]}-${match[3]}`;
+        }
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
 
 
 export default function LogsPage() {
@@ -9,8 +28,7 @@ export default function LogsPage() {
     const [user, setUser] = useState(null);
     const [logs, setLogs] = useState([]);
     const [openFilter, setOpenFilter] = useState(false);
-    const [showProfile, setShowProfile] = useState(false);
-    const [open, setOpen] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
 
     const [activeFilter, setActiveFilter] = useState({
         time: "monthly",
@@ -31,23 +49,41 @@ export default function LogsPage() {
 
         // TIME FILTER
         if (activeFilter.time === "7days") {
-            const cutoff = new Date(now.setDate(now.getDate() - 7));
+            const cutoff = new Date(now);
+            cutoff.setDate(cutoff.getDate() - 7);
             if (d < cutoff) return false;
         }
 
         if (activeFilter.time === "1month") {
-            const cutoff = new Date(now.setMonth(now.getMonth() - 1));
+            const cutoff = new Date(now);
+            cutoff.setMonth(cutoff.getMonth() - 1);
             if (d < cutoff) return false;
         }
 
         if (activeFilter.time === "1year") {
-            const cutoff = new Date(now.setFullYear(now.getFullYear() - 1));
+            const cutoff = new Date(now);
+            cutoff.setFullYear(cutoff.getFullYear() - 1);
             if (d < cutoff) return false;
         }
 
         if (activeFilter.time === "custom") {
             if (!activeFilter.customStart || !activeFilter.customEnd) return false;
-            if (d < new Date(activeFilter.customStart) || d > new Date(activeFilter.customEnd)) {
+
+            const start = new Date(activeFilter.customStart);
+            start.setHours(0, 0, 0, 0);
+
+            const end = new Date(activeFilter.customEnd);
+            end.setHours(23, 59, 59, 999);
+
+            if (d < start || d > end) {
+                return false;
+            }
+        }
+
+        if (activeFilter.time === "specific") {
+            if (!activeFilter.customStart) return false;
+
+            if (toLocalDateKey(d) !== toLocalDateKey(activeFilter.customStart)) {
                 return false;
             }
         }
@@ -57,6 +93,17 @@ export default function LogsPage() {
         if (activeFilter.type === "expense" && !log.action.includes("EXPENSE")) return false;
 
         return true;
+    });
+
+    const visibleLogs = filteredLogs.filter((log) => {
+        const term = searchTerm.toLowerCase().trim();
+        if (!term) return true;
+
+        return (
+            log.action?.toLowerCase().includes(term) ||
+            log.message?.toLowerCase().includes(term) ||
+            formatDate(log.timestamp).toLowerCase().includes(term)
+        );
     });
 
     // 4️⃣ LOAD USER
@@ -150,13 +197,17 @@ export default function LogsPage() {
                     {/* TOP ROW — optional search + currency */}
                     <div className="top-row">
                         <div className="search-wrap">
-                            <input className="search" placeholder="Search logs" />
+                            <input
+                                className="search"
+                                placeholder="Search logs"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
                         </div>
 
                         <div className="actions">
-                            {/* <button className="button" onClick={() => setOpenFilter(true)}>Filter</button>
-                             */}
-                            <button className="button" onClick={() => exportLogsCSV("logs.csv", filteredLogs)}>
+                            <button className="button" onClick={() => setOpenFilter(true)}>Filter</button>
+                            <button className="button" onClick={() => exportLogsCSV("logs.csv", visibleLogs)}>
                                 Export CSV
                             </button>
 
@@ -180,25 +231,29 @@ export default function LogsPage() {
                                     </thead>
 
                                     <tbody>
-                                        {filteredLogs.length === 0 ? (
+                                        {visibleLogs.length === 0 ? (
                                             <tr>
                                                 <td colSpan="3" className={styles.empty}>
                                                     No activity found
                                                 </td>
                                             </tr>
                                         ) : (
-                                            filteredLogs.map((log) => (
+                                            visibleLogs.map((log) => (
                                                 <tr key={log.id}>
-                                                    <td
-                                                        className={
-                                                            log.action.includes("ADD")
-                                                                ? styles.green
-                                                                : log.action.includes("DELETE")
-                                                                    ? styles.red
-                                                                    : styles.gray
-                                                        }
-                                                    >
-                                                        {log.action}
+                                                    <td>
+                                                        <span
+                                                            className={
+                                                                log.action.includes("ADD")
+                                                                    ? styles.badgeGreen
+                                                                    : log.action.includes("DELETE")
+                                                                        ? styles.badgeRed
+                                                                        : log.action.includes("EDIT")
+                                                                            ? styles.badgeBlue
+                                                                            : styles.badgeGray
+                                                            }
+                                                        >
+                                                            {log.action}
+                                                        </span>
                                                     </td>
 
                                                     <td>{log.message}</td>

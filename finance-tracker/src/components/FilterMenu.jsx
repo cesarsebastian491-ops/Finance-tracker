@@ -1,6 +1,25 @@
 import { useState, useRef, useEffect } from "react";
 import styles from "./DateFilterMenu.module.css";
 
+function toLocalDateKey(value) {
+  if (!value) return "";
+
+  if (typeof value === "string") {
+    const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      return `${match[1]}-${match[2]}-${match[3]}`;
+    }
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export default function FilterMenu({ onApplyFilters, transactions }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -20,42 +39,46 @@ export default function FilterMenu({ onApplyFilters, transactions }) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  function applyDateFilter() {
+  function applyDateFilter({
+    selectedDateFilter = dateFilter,
+    selectedCustomStart = customStart,
+    selectedCustomEnd = customEnd,
+    selectedSpecificDate = specificDate,
+  } = {}) {
     const now = new Date();
 
-    if (dateFilter === "7days") {
+    if (selectedDateFilter === "7days") {
       const past = new Date();
       past.setDate(now.getDate() - 7);
       return transactions.filter(t => new Date(t.date) >= past);
     }
 
-    if (dateFilter === "1month") {
+    if (selectedDateFilter === "1month") {
       const past = new Date();
       past.setMonth(now.getMonth() - 1);
       return transactions.filter(t => new Date(t.date) >= past);
     }
 
-    if (dateFilter === "1year") {
+    if (selectedDateFilter === "1year") {
       const past = new Date();
       past.setFullYear(now.getFullYear() - 1);
       return transactions.filter(t => new Date(t.date) >= past);
     }
 
-    if (dateFilter === "specific" && specificDate) {
-      const target = new Date(specificDate);
+    if (selectedDateFilter === "specific" && selectedSpecificDate) {
+      const targetKey = toLocalDateKey(selectedSpecificDate);
       return transactions.filter(t => {
-        const d = new Date(t.date);
-        return (
-          d.getFullYear() === target.getFullYear() &&
-          d.getMonth() === target.getMonth() &&
-          d.getDate() === target.getDate()
-        );
+        return toLocalDateKey(t.date) === targetKey;
       });
     }
 
-    if (dateFilter === "custom") {
-      const start = new Date(customStart);
-      const end = new Date(customEnd);
+    if (selectedDateFilter === "custom" && selectedCustomStart && selectedCustomEnd) {
+      const start = new Date(selectedCustomStart);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(selectedCustomEnd);
+      end.setHours(23, 59, 59, 999);
+
       return transactions.filter(t => {
         const d = new Date(t.date);
         return d >= start && d <= end;
@@ -71,13 +94,20 @@ export default function FilterMenu({ onApplyFilters, transactions }) {
   }
 
   function resetFilters() {
-    setDateFilter("monthly");
-    setCustomStart("");
-    setCustomEnd("");
-    setSpecificDate("");
+    const resetState = {
+      selectedDateFilter: "monthly",
+      selectedCustomStart: "",
+      selectedCustomEnd: "",
+      selectedSpecificDate: "",
+    };
+
+    setDateFilter(resetState.selectedDateFilter);
+    setCustomStart(resetState.selectedCustomStart);
+    setCustomEnd(resetState.selectedCustomEnd);
+    setSpecificDate(resetState.selectedSpecificDate);
 
     onApplyFilters({
-      filtered: applyDateFilter(),
+      filtered: applyDateFilter(resetState),
       filterType: "monthly",
       customStart: "",
       customEnd: "",
@@ -151,8 +181,10 @@ export default function FilterMenu({ onApplyFilters, transactions }) {
             <button
               className={styles.applyBtn}
               onClick={() => {
+                const nextFiltered = applyDateFilter();
+
                 onApplyFilters({
-                  filtered: applyDateFilter(),
+                  filtered: nextFiltered,
                   filterType: dateFilter,
                   customStart,
                   customEnd,

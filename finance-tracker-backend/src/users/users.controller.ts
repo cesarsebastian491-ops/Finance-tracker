@@ -86,6 +86,27 @@ export class UsersController {
     return this.usersService.findOnlineUsers();
   }
 
+  // STAFF — view list of users (no sensitive data)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('staff', 'admin')
+  @Get('staff/list')
+  async getStaffUserList() {
+    const users = await this.usersService.findAll();
+    return users.map(u => ({
+      id: u.id,
+      username: u.username,
+      firstName: u.firstName,
+      lastName: u.lastName,
+      email: u.email,
+      phone: u.phone,
+      role: u.role,
+      status: u.status,
+      createdAt: u.createdAt,
+      lastActive: u.lastActive,
+      online: u.online,
+    }));
+  }
+
   @UseGuards(AuthGuard('jwt'))
   @Get(':id')
   getUserProfile(@Param('id', ParseIntPipe) id: number) {

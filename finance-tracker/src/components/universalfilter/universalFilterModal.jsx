@@ -2,12 +2,12 @@ import { useState } from "react";
 import styles from "./UniversalFilterModal.module.css";
 
 export default function UniversalFilterModal({ open, onClose, onApply }) {
-    if (!open) return null;
-
     const [timeFilter, setTimeFilter] = useState("monthly");
     const [typeFilter, setTypeFilter] = useState("all");
     const [customStart, setCustomStart] = useState("");
     const [customEnd, setCustomEnd] = useState("");
+
+    if (!open) return null;
 
     function applyFilters() {
         onApply({
