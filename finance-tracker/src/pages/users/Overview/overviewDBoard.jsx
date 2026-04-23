@@ -1,6 +1,8 @@
 import FilterMenu from "../../../components/FilterMenu";
+import TransactionInfoModal from "../../../components/TransactionInfoModal";
 import { CurrencyContext } from "../../../context/CurrencyContext";
 import { useEffect, useState, useContext, useRef } from "react";
+import { NavLink } from "react-router-dom";
 import styles from "./overview.module.css";
 import { API_URL } from "../../../config";
 import { Bar } from "react-chartjs-2";
@@ -75,13 +77,15 @@ function filterCurrentMonth(transactions) {
 }
 
 
-export default function overviewDBoard() {
+export default function overviewDBoard({ role } = {}) {
+    const isStaff = role === "staff";
     const [user, setUser] = useState(null);
     const [transactions, setTransactions] = useState([]);
-    const { mainCurrency } = useContext(CurrencyContext);
+    const { activeCurrency } = useContext(CurrencyContext);
     const [filteredTransactions, setFilteredTransactions] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
-    const [sortOrder, setSortOrder] = useState("desc"); // "desc" = Latest first
+    const [sortOrder, setSortOrder] = useState("desc");
+    const [selectedTransaction, setSelectedTransaction] = useState(null);
     const tableRef = useRef(null);
 
 
@@ -91,7 +95,7 @@ export default function overviewDBoard() {
     }
 
     const [activeFilter, setActiveFilter] = useState({
-        filterType: "monthly",
+        filterType: "all",
         customStart: null,
         customEnd: null,
         specificDate: null
@@ -111,8 +115,11 @@ export default function overviewDBoard() {
                     : "Specific Date";
             case "custom":
                 return `${formatDate(activeFilter.customStart)} → ${formatDate(activeFilter.customEnd)}`;
-            default:
+            case "monthly":
                 return "This Month";
+            case "all":
+            default:
+                return "All Time";
         }
     }
 
@@ -121,7 +128,7 @@ export default function overviewDBoard() {
     // get user info start
     useEffect(() => {
         const storedUser = JSON.parse(localStorage.getItem("user"));
-        if (!storedUser) {
+        if (!storedUser && !isStaff) {
             window.location.href = "/";
             return;
         }
@@ -132,7 +139,13 @@ export default function overviewDBoard() {
         if (!user) return; // prevent undefined fetch
 
         async function loadData() {
-            const res = await fetch(`${API_URL}/transactions/user/${user.id}`);
+            const url = isStaff
+                ? `${API_URL}/analytics/staff/transactions`
+                : `${API_URL}/transactions/user/${user.id}`;
+
+            const res = await fetch(url, {
+                headers: isStaff ? { Authorization: `Bearer ${user.access_token}` } : {},
+            });
             const data = await res.json();
             setTransactions(data);
         }
@@ -145,7 +158,7 @@ export default function overviewDBoard() {
     // total money calculations
     const currentMonthTransactions = filterCurrentMonth(transactions);
 
-    const dataToUse = filteredTransactions ?? currentMonthTransactions;
+    const dataToUse = filteredTransactions ?? transactions;
 
     const totalIncome = dataToUse
         .filter(t => t.type === "income")
@@ -160,7 +173,7 @@ export default function overviewDBoard() {
     function formatMoney(amount) {
         return new Intl.NumberFormat(undefined, {
             style: "currency",
-            currency: mainCurrency,
+            currency: activeCurrency?.code || 'PHP',
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         }).format(Number(amount) || 0);
@@ -238,23 +251,26 @@ export default function overviewDBoard() {
     const sortedTransactions = [...searchFiltered].sort((a, b) => {
         const dateA = new Date(a.date);
         const dateB = new Date(b.date);
+        return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+    }).slice(0, 15);
 
-        return sortOrder === "desc"
-            ? dateB - dateA
-            : dateA - dateB;
-    });
+    function getTotalWithCharges(tx) {
+        const base = Number(tx.amount) || 0;
+        const tax = Number(tx.tax) || 0;
+        const serviceFee = Number(tx.serviceFee) || 0;
+        const otherCharge = Number(tx.otherCharge) || 0;
+        const discount = Number(tx.discount) || 0;
+        return base + tax + serviceFee + otherCharge - discount;
+    }
 
     useEffect(() => {
         if (!tableRef.current) return;
-
-        const wrapper = tableRef.current;
-
-        if (sortOrder === "desc") {
-            wrapper.scrollTop = 0; // newest → top
+        if (sortOrder === "asc") {
+            tableRef.current.scrollTop = tableRef.current.scrollHeight;
         } else {
-            wrapper.scrollTop = wrapper.scrollHeight; // oldest → bottom
+            tableRef.current.scrollTop = 0;
         }
-    }, [sortOrder, sortedTransactions]);
+    }, [sortedTransactions, sortOrder]);
 
 
     if (!user) return null;
@@ -300,15 +316,12 @@ export default function overviewDBoard() {
 
                         {/* ACTION BUTTONS */}
                         <div className="row action-row">
-
                             <button
                                 className="button"
                                 onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
                             >
                                 Sort: {sortOrder === "desc" ? "Latest ↓" : "Oldest ↑"}
                             </button>
-                            {/* <button className="button">Export CSV</button>
-                            <button className="button">Print</button> */}
                         </div>
 
                     </div>
@@ -319,17 +332,17 @@ export default function overviewDBoard() {
                     <section className={styles.overview}>
                         <div className={styles.cards}>
 
-                            <div className={styles.card}>
+                            <div className={`${styles.card} ${styles.revenueCard}`}>
                                 Total Revenue ({getFilterLabel()})
                                 <div className={styles.value}>{formatMoney(totalIncome)}</div>
                             </div>
 
-                            <div className={styles.card}>
+                            <div className={`${styles.card} ${styles.expenseCard}`}>
                                 Total Expense ({getFilterLabel()})
                                 <div className={styles.value}>{formatMoney(totalExpense)}</div>
                             </div>
 
-                            <div className={styles.card}>
+                            <div className={`${styles.card} ${styles.balanceCard}`}>
                                 Net Balance ({getFilterLabel()})
                                 <div className={`${styles.value} ${netBalance < 0 ? styles.negativeValue : ""}`}>
                                     {formatMoney(netBalance)}
@@ -350,9 +363,9 @@ export default function overviewDBoard() {
                                 <table className={styles.runningTable}>
                                     <thead>
                                         <tr>
-                                            <th>Category / Source</th>
-                                            <th>Income</th>
-                                            <th>Expense</th>
+                                            <th>Title</th>
+                                            <th>Category</th>
+                                            <th>Total</th>
                                             <th>Date</th>
                                         </tr>
                                     </thead>
@@ -366,23 +379,19 @@ export default function overviewDBoard() {
                                             </tr>
                                         ) : (
                                             sortedTransactions.map((tx) => (
-                                                <tr key={tx.id}>
+                                                <tr key={tx.id} className={tx.type === "income" ? styles.incomeRow : styles.expenseRow} onClick={() => setSelectedTransaction(tx)} style={{ cursor: "pointer" }}>
                                                     <td>
                                                         {tx.type === "income"
                                                             ? tx.source
                                                             : tx.category || "—"}
                                                     </td>
 
-                                                    <td className={styles.green}>
-                                                        {tx.type === "income"
-                                                            ? formatMoney(tx.amount)
-                                                            : ""}
+                                                    <td>
+                                                        {tx.type === "income" ? tx.category || "Income" : tx.category || "—"}
                                                     </td>
 
-                                                    <td className={styles.red}>
-                                                        {tx.type === "expense"
-                                                            ? formatMoney(tx.amount)
-                                                            : ""}
+                                                    <td className={tx.type === "income" ? styles.green : styles.red}>
+                                                        {formatMoney(getTotalWithCharges(tx))}
                                                     </td>
 
                                                     <td>{formatDate(tx.date)}</td>
@@ -391,6 +400,12 @@ export default function overviewDBoard() {
                                         )}
                                     </tbody>
                                 </table>
+                            </div>
+
+                            <div className={styles.showMoreWrap}>
+                                <NavLink to={isStaff ? "/staff/transactions/running-balance" : "/user/running-balance"} className="button">
+                                    View More
+                                </NavLink>
                             </div>
                         </section>
 
@@ -408,6 +423,15 @@ export default function overviewDBoard() {
                     </div>
                 </div>
             </main>
+
+            {selectedTransaction && (
+                <TransactionInfoModal
+                    transaction={selectedTransaction}
+                    onClose={() => setSelectedTransaction(null)}
+                    formatMoney={formatMoney}
+                    formatDate={formatDate}
+                />
+            )}
 
         </>
     );

@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import styles from "./allTransactions.module.css";
 import "../../../Components/staffTheme.css";
 import { API_URL } from "../../../../../config";
-import { EXPENSE_CATEGORIES } from "../../../../../components/categories";
+import { CurrencyContext } from "../../../../../context/CurrencyContext";
 
 export default function AllTransactions() {
+    const { activeCurrency } = useContext(CurrencyContext);
     const [transactions, setTransactions] = useState([]);
     const [filtered, setFiltered] = useState([]);
 
@@ -36,7 +37,18 @@ export default function AllTransactions() {
             setFiltered(json);
 
             const unique = [...new Set(json.map(t => t.category).filter(Boolean))];
-            setCategories(unique);
+
+            try {
+                const categoryRes = await fetch(`${API_URL}/transactions/categories`);
+                const categoryJson = await categoryRes.json();
+                const sqlCategories = Array.isArray(categoryJson)
+                    ? categoryJson.map((c) => c?.name).filter(Boolean)
+                    : [];
+
+                setCategories(sqlCategories.length > 0 ? sqlCategories : unique);
+            } catch {
+                setCategories(unique);
+            }
         }
 
         loadTransactions();
@@ -117,7 +129,7 @@ export default function AllTransactions() {
                         onChange={(e) => setCategoryFilter(e.target.value)}
                     >
                         <option value="">All Categories</option>
-                        {EXPENSE_CATEGORIES.map((cat) => (
+                        {categories.map((cat) => (
                             <option key={cat} value={cat}>
                                 {cat}
                             </option>
@@ -154,7 +166,7 @@ export default function AllTransactions() {
                             {t.type}
                         </span>
                         <span>{t.category || "—"}</span>
-                        <span>${t.amount.toLocaleString()}</span>
+                        <span>{activeCurrency?.symbol}{t.amount.toLocaleString()}</span>
                         <span>{new Date(t.date).toLocaleDateString()}</span>
                     </div>
                 ))}

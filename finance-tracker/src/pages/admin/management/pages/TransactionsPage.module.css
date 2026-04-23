@@ -1,8 +1,24 @@
 .page {
   /* padding: 20px; */
+  margin-top: -30px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.page h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-main);
+  font-family: var(--font-headline);
+}
+
+.searchRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 /* Prevent table overflow */
@@ -14,7 +30,7 @@
   overflow-x: auto;
   display: block;
   border-radius: 8px;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border-color);
 }
 
 .tableWrapper::-webkit-scrollbar {
@@ -22,50 +38,76 @@
 }
 
 .tableWrapper::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: var(--border-color);
   border-radius: 10px;
 }
 
 .tableWrapper::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: var(--text-muted);
 }
 
 /* Search Input */
 .searchInput {
-  width: 260px;
+  flex: 1;
+  min-width: 200px;
   padding: 10px 14px;
-  border: 1px solid #dcdcdc;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 14px;
-  background: #fafafa;
+  background: var(--surface-alt);
   transition: 0.2s ease;
-  color: #333;
-  margin-right: 20px;
+  color: var(--text-main);
+  font-family: var(--font-body);
 }
 
 .searchInput:focus {
-  background: #fff;
-  border-color: #4a90e2;
+  background: var(--surface);
+  border-color: var(--color-primary);
   outline: none;
-  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.25);
+  box-shadow: 0 0 0 2px rgba(0, 77, 64, 0.25);
 }
 
 .filterSelect {
   padding: 10px 14px;
-  border: 1px solid #dcdcdc;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 14px;
-  background: #fafafa;
-  color: #333;
+  background: var(--surface-alt);
+  color: var(--text-main);
   cursor: pointer;
   transition: 0.2s ease;
+  font-family: var(--font-body);
 }
 
 .filterSelect:focus {
-  background: #fff;
-  border-color: #4a90e2;
+  background: var(--surface);
+  border-color: var(--color-primary);
   outline: none;
-  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.25);
+  box-shadow: 0 0 0 2px rgba(0, 77, 64, 0.25);
+}
+
+.sortBtn {
+  padding: 10px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--surface-alt);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: 0.2s ease;
+  font-weight: 600;
+  white-space: nowrap;
+  font-family: var(--font-body);
+}
+
+.sortBtn:hover {
+  background: var(--color-primary-light);
+  color: var(--text-light);
+  border-color: var(--color-primary);
+}
+
+.sortBtn:active {
+  background: var(--color-primary);
 }
 
 /* Table */
@@ -88,7 +130,7 @@
 .adminTable thead th {
   position: sticky;
   top: 0;
-  background: #f3f4f6;
+  background: var(--surface-alt);
   z-index: 2;
 }
 
@@ -96,20 +138,23 @@
   padding: 14px;
   font-size: 14px;
   font-weight: 600;
-  color: #333;
-  border-bottom: 1px solid #e5e5e5;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border-color);
   text-align: left;
   cursor: pointer;
   user-select: none;
+  font-family: var(--font-body);
 }
 
 .adminTable td {
   font-size: 14px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-family: var(--font-body);
 }
 
 .adminTable tr:hover {
-  background: #f9fbff;
+  background: var(--surface-alt);
 }
 
 /* Buttons */
@@ -121,23 +166,27 @@
   cursor: pointer;
   border: none;
   transition: 0.2s ease;
+  font-weight: 600;
+  font-family: var(--font-body);
 }
 
 .editBtn {
-  background: #4a90e2;
-  color: white;
+  background: var(--color-edit-light);
+  color: var(--color-edit);
   margin-right: 6px;
 }
 
 .editBtn:hover {
-  background: #3a7ac4;
+  background: var(--color-edit);
+  color: var(--text-light);
 }
 
 .deleteBtn {
-  background: #ff4d4f;
-  color: white;
+  background: var(--color-delete-light);
+  color: var(--color-delete);
 }
 
 .deleteBtn:hover {
-  background: #d9363e;
+  background: var(--color-delete);
+  color: var(--text-light);
 }

@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import styles from "./transactionDashboard.module.css";
 import StaffMonthlyPie from "../../../Components/StaffMonthlyPie";
 import { API_URL } from "../../../../../config";
+import { CurrencyContext } from "../../../../../context/CurrencyContext";
 import "../../../Components/staffTheme.css";
 
 export default function TransactionDashboard() {
+    const { activeCurrency } = useContext(CurrencyContext);
     const [summary, setSummary] = useState(null);
     const [recent, setRecent] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -45,8 +47,8 @@ export default function TransactionDashboard() {
             {/* Summary Cards — use staff summary fields */}
             <div className={styles.cardGrid}>
                 <Card label="Total Transactions" value={summary.totalTransactions} prefix="" />
-                <Card label="Income This Month" value={summary.thisMonthIncome} prefix="$" />
-                <Card label="Expense This Month" value={summary.thisMonthExpense} prefix="$" />
+                <Card label="Income This Month" value={summary.thisMonthIncome} prefix={activeCurrency?.symbol} />
+                <Card label="Expense This Month" value={summary.thisMonthExpense} prefix={activeCurrency?.symbol} />
                 <Card label="Active Users" value={summary.activeUsers} prefix="" />
             </div>
 
@@ -69,18 +71,18 @@ export default function TransactionDashboard() {
 
                                     <div className={styles.detailRow}>
                                         <span className={styles.incomeDot}></span>
-                                        <p>Income: <strong>${monthlyData.income.toLocaleString()}</strong></p>
+                                        <p>Income: <strong>{activeCurrency?.symbol}{monthlyData.income.toLocaleString()}</strong></p>
                                     </div>
 
                                     <div className={styles.detailRow}>
                                         <span className={styles.expenseDot}></span>
-                                        <p>Expense: <strong>${monthlyData.expense.toLocaleString()}</strong></p>
+                                        <p>Expense: <strong>{activeCurrency?.symbol}{monthlyData.expense.toLocaleString()}</strong></p>
                                     </div>
 
                                     <p>
                                         Net Balance:{" "}
                                         <strong style={{ color: monthlyData.income - monthlyData.expense >= 0 ? "green" : "red" }}>
-                                            ${(monthlyData.income - monthlyData.expense).toLocaleString()}
+                                            {activeCurrency?.symbol}{(monthlyData.income - monthlyData.expense).toLocaleString()}
                                         </strong>
                                     </p>
 
@@ -104,7 +106,7 @@ export default function TransactionDashboard() {
                         categories.map((c) => (
                             <div key={c.category} className={styles.catRow}>
                                 <span>{c.category}</span>
-                                <span>${Number(c.amount).toLocaleString()}</span>
+                                <span>{activeCurrency?.symbol}{Number(c.amount).toLocaleString()}</span>
                             </div>
                         ))
                     )}
@@ -129,7 +131,7 @@ export default function TransactionDashboard() {
                             <span>{t.user?.username || "—"}</span>
                             <span className={t.type === "income" ? styles.income : styles.expense}>{t.type}</span>
                             <span>{t.category || "—"}</span>
-                            <span>${Number(t.amount).toLocaleString()}</span>
+                            <span>{activeCurrency?.symbol}{Number(t.amount).toLocaleString()}</span>
                             <span>{t.date ? new Date(t.date).toLocaleDateString() : "—"}</span>
                         </div>
                     ))

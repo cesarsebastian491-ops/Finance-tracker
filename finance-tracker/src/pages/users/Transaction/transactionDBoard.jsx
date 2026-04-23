@@ -1,7 +1,9 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import UniversalFilterModal from "../../../components/universalfilter/universalFilterModal";
+import TransactionInfoModal from "../../../components/TransactionInfoModal";
 import styles from "./transaction.module.css";
 import { API_URL } from "../../../config";
+import { CurrencyContext } from "../../../context/CurrencyContext";
 
 
 function toLocalDateKey(value) {
@@ -25,16 +27,20 @@ function toLocalDateKey(value) {
 
 
 
-export default function RunningBalancePage() {
+export default function RunningBalancePage({ role } = {}) {
+
+    const isStaff = role === "staff";
+    const { activeCurrency } = useContext(CurrencyContext);
 
     // ============================
     // STATE
     // ============================
-    const [sortOrder, setSortOrder] = useState("desc");
+    const [sortOrder, setSortOrder] = useState("asc");
     const [user, setUser] = useState(null);
     const [transactions, setTransactions] = useState([]);
     const [openFilter, setOpenFilter] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+    const [selectedTransaction, setSelectedTransaction] = useState(null);
     const tableRef = useRef();
 
     // ⭐ FILTER STATE
@@ -115,14 +121,24 @@ export default function RunningBalancePage() {
     // ============================
     // RUNNING BALANCE CALCULATION
     // ============================
+    function getTotalWithCharges(tx) {
+        const base = Number(tx.amount) || 0;
+        const tax = Number(tx.tax) || 0;
+        const serviceFee = Number(tx.serviceFee) || 0;
+        const otherCharge = Number(tx.otherCharge) || 0;
+        const discount = Number(tx.discount) || 0;
+        return base + tax + serviceFee + otherCharge - discount;
+    }
+
     function calculateRunningBalance(list) {
         let balance = 0;
 
         return list.map(tx => {
+            const total = getTotalWithCharges(tx);
             if (tx.type === "income") {
-                balance += Number(tx.amount);
+                balance += total;
             } else {
-                balance -= Number(tx.amount);
+                balance -= total;
             }
             return { ...tx, runningBalance: balance };
         });
@@ -140,11 +156,13 @@ export default function RunningBalancePage() {
         if (!term) return true;
 
         return (
-            (tx.type === "income" ? tx.source : tx.category)?.toLowerCase().includes(term) ||
+            (tx.type === "income" ? tx.source : tx.expense)?.toLowerCase().includes(term) ||
+            tx.category?.toLowerCase().includes(term) ||
             tx.type?.toLowerCase().includes(term) ||
             formatDate(tx.date).toLowerCase().includes(term) ||
             formatMoney(tx.amount).toLowerCase().includes(term) ||
-            formatMoney(tx.runningBalance).toLowerCase().includes(term)
+            formatMoney(tx.runningBalance).toLowerCase().includes(term) ||
+            (isStaff && tx.user?.username?.toLowerCase().includes(term))
         );
     });
 
@@ -159,7 +177,7 @@ export default function RunningBalancePage() {
     // ============================
     useEffect(() => {
         const storedUser = JSON.parse(localStorage.getItem("user"));
-        if (!storedUser) {
+        if (!storedUser && !isStaff) {
             window.location.href = "/";
             return;
         }
@@ -173,7 +191,13 @@ export default function RunningBalancePage() {
         if (!user) return;
 
         async function loadData() {
-            const res = await fetch(`${API_URL}/transactions/user/${user.id}`);
+            const url = isStaff
+                ? `${API_URL}/analytics/staff/transactions`
+                : `${API_URL}/transactions/user/${user.id}`;
+
+            const res = await fetch(url, {
+                headers: isStaff ? { Authorization: `Bearer ${user.access_token}` } : {},
+            });
             const data = await res.json();
             setTransactions(data);
         }
@@ -189,7 +213,7 @@ export default function RunningBalancePage() {
     function formatMoney(amount) {
         return Number(amount).toLocaleString("en-US", {
             style: "currency",
-            currency: "php"
+            currency: activeCurrency?.code || "PHP"
         });
     }
 
@@ -210,18 +234,20 @@ export default function RunningBalancePage() {
         if (!rows || rows.length === 0) return;
 
         const headers = [
+            "Title",
             "Date",
-            "Category / Source",
+            "Category",
             "Expense",
             "Income",
             "Running Balance"
         ];
 
         const values = rows.map(tx => [
+            tx.type === "income" ? (tx.source || "—") : (tx.expense || "—"),
             formatDate(tx.date),
-            tx.type === "income" ? tx.source : tx.category,
-            tx.type === "expense" ? formatMoney(tx.amount) : "",
-            tx.type === "income" ? formatMoney(tx.amount) : "",
+            tx.category || "—",
+            tx.type === "expense" ? formatMoney(getTotalWithCharges(tx)) : "",
+            tx.type === "income" ? formatMoney(getTotalWithCharges(tx)) : "",
             formatMoney(tx.runningBalance)
         ]);
 
@@ -273,8 +299,6 @@ export default function RunningBalancePage() {
                                 Sort: {sortOrder === "desc" ? "Newest ↓" : "Oldest ↑"}
                             </button>
 
-                            {/* <CurrencyPopup /> */}
-
                             <button className="button" onClick={() => exportToCSV("running_balance.csv", visibleRunningList)}>
                                 Export CSV
                             </button>
@@ -294,8 +318,10 @@ export default function RunningBalancePage() {
                                 <table className={styles.runningTable}>
                                     <thead>
                                         <tr>
+                                            {isStaff && <th>Username</th>}
+                                            <th>Title</th>
                                             <th>Date</th>
-                                            <th>Category / Source</th>
+                                            <th>Category</th>
                                             <th>Expense</th>
                                             <th>Income</th>
                                             <th>Running Balance</th>
@@ -305,22 +331,29 @@ export default function RunningBalancePage() {
                                     <tbody>
                                         {visibleRunningList.length === 0 ? (
                                             <tr>
-                                                <td colSpan="5" className={styles.txEmpty}>
+                                                <td colSpan={isStaff ? 7 : 6} className={styles.txEmpty}>
                                                     No transactions found
                                                 </td>
                                             </tr>
                                         ) : (
                                             visibleRunningList.map((tx) => (
-                                                <tr key={tx.id}>
+                                                <tr
+                                                    key={tx.id}
+                                                    className={tx.type === "income" ? styles.incomeRow : styles.expenseRow}
+                                                    onClick={() => setSelectedTransaction(tx)}
+                                                    style={{ cursor: "pointer" }}
+                                                >
+                                                    {isStaff && <td>{tx.user?.username || '—'}</td>}
+                                                    <td>{tx.type === "income" ? (tx.source || "—") : (tx.expense || "—")}</td>
                                                     <td>{formatDate(tx.date)}</td>
-                                                    <td>{tx.type === "income" ? tx.source : tx.category}</td>
+                                                    <td>{tx.category || "—"}</td>
 
                                                     <td className={styles.expenseAmount}>
-                                                        {tx.type === "expense" ? formatMoney(tx.amount) : ""}
+                                                        {tx.type === "expense" ? formatMoney(getTotalWithCharges(tx)) : ""}
                                                     </td>
 
                                                     <td className={styles.revenueAmount}>
-                                                        {tx.type === "income" ? formatMoney(tx.amount) : ""}
+                                                        {tx.type === "income" ? formatMoney(getTotalWithCharges(tx)) : ""}
                                                     </td>
 
                                                     <td className={tx.runningBalance >= 0 ? styles.revenueAmount : styles.expenseAmount}>
@@ -337,6 +370,15 @@ export default function RunningBalancePage() {
                 </div>
 
             </main>
+
+            {selectedTransaction && (
+                <TransactionInfoModal
+                    transaction={selectedTransaction}
+                    onClose={() => setSelectedTransaction(null)}
+                    formatMoney={formatMoney}
+                    formatDate={formatDate}
+                />
+            )}
 
             <UniversalFilterModal
                 open={openFilter}

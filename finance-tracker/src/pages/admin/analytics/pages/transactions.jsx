@@ -1,29 +1,47 @@
 // src/pages/admin/analytics/transactions.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import styles from "./transactionsAnalytics.module.css";
 import { API_URL } from "../../../../config";
+import { CurrencyContext } from "../../../../context/CurrencyContext";
 
 export default function AdminTransactionsAnalyticsPage() {
+  const { activeCurrency } = useContext(CurrencyContext);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [modalTransactions, setModalTransactions] = useState([]);
-
-  const token = localStorage.getItem("token");
+  const [filteredTransactions, setFilteredTransactions] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  const stored = JSON.parse(localStorage.getItem("user"));
+  const token = stored?.access_token;
 
   useEffect(() => {
+    if (!token) {
+      setError("Authentication required. Please log in again.");
+      setLoading(false);
+      return;
+    }
+
     async function fetchAnalytics() {
       try {
         const res = await fetch(`${API_URL}/analytics/transactions`, {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         });
+        
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        
         const json = await res.json();
         setData(json);
+        setError(null);
       } catch (err) {
-        console.error("Failed to load transactions analytics", err);
+        console.error("Failed to load transactions analytics:", err);
+        setError(`Failed to load analytics: ${err.message}`);
       } finally {
         setLoading(false);
       }
@@ -32,15 +50,43 @@ export default function AdminTransactionsAnalyticsPage() {
     fetchAnalytics();
   }, [token]);
 
+  useEffect(() => {
+    const filtered = modalTransactions.filter(t => {
+      const searchLower = searchTerm.toLowerCase();
+      return `${t.category} ${t.notes || ""} ${t.user?.firstName || ""} ${t.user?.lastName || ""}`.toLowerCase().includes(searchLower);
+    });
+    setFilteredTransactions(filtered);
+  }, [searchTerm, modalTransactions]);
+
   function openModal(title, list) {
     setModalTitle(title);
     setModalTransactions(list || []);
+    setSearchTerm("");
     setShowModal(true);
   }
 
-  if (loading || !data) {
-    return <p className={styles.loading}>Loading transactions analytics...</p>;
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loadingSpinner}>
+          <div className={styles.spinner}></div>
+          <p>Loading transactions analytics...</p>
+        </div>
+      </div>
+    );
   }
+
+  if (!data) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.errorMessage}>
+          <p>⚠️ No data available</p>
+        </div>
+      </div>
+    );
+  }
+
+  const fc = (amount) => formatCurrency(amount, activeCurrency?.symbol);
 
   return (
     <div className={styles.container}>
@@ -50,7 +96,7 @@ export default function AdminTransactionsAnalyticsPage() {
       <div className={styles.grid}>
         <Card
           label="Net Balance"
-          value={formatCurrency(data.netBalance)}
+          value={fc(data.netBalance)}
           onClick={() =>
             openModal("All Transactions (Income & Expense)", data.allTransactionsList)
           }
@@ -64,7 +110,7 @@ export default function AdminTransactionsAnalyticsPage() {
         />
         <Card
           label="This Month Income"
-          value={formatCurrency(data.thisMonthIncome)}
+          value={fc(data.thisMonthIncome)}
           onClick={() =>
             openModal(
               "This Month Income Transactions",
@@ -74,7 +120,7 @@ export default function AdminTransactionsAnalyticsPage() {
         />
         <Card
           label="This Month Expense"
-          value={formatCurrency(data.thisMonthExpense)}
+          value={fc(data.thisMonthExpense)}
           onClick={() =>
             openModal(
               "This Month Expense Transactions",
@@ -93,10 +139,10 @@ export default function AdminTransactionsAnalyticsPage() {
               <div key={m.month} className={styles.row}>
                 <span className={styles.month}>{m.month}</span>
                 <span className={styles.income}>
-                  Income: {formatCurrency(m.income)}
+                  Income: {fc(m.income)}
                 </span>
                 <span className={styles.expense}>
-                  Expense: {formatCurrency(m.expense)}
+                  Expense: {fc(m.expense)}
                 </span>
               </div>
             ))}
@@ -109,7 +155,7 @@ export default function AdminTransactionsAnalyticsPage() {
             {data.categoryBreakdown?.map((c) => (
               <div key={c.category} className={styles.row}>
                 <span>{c.category}</span>
-                <span>{formatCurrency(c.amount)}</span>
+                <span>{fc(c.amount)}</span>
               </div>
             ))}
           </div>
@@ -135,7 +181,7 @@ export default function AdminTransactionsAnalyticsPage() {
                 {t.type}
               </span>
               <span>{t.category}</span>
-              <span>{formatCurrency(t.amount)}</span>
+              <span>{fc(t.amount)}</span>
               <span>
                 {t.user
                   ? `${t.user.firstName} ${t.user.lastName}`
@@ -151,39 +197,71 @@ export default function AdminTransactionsAnalyticsPage() {
       {showModal && (
         <div
           className={styles.modalBackdrop}
-          onClick={() => setShowModal(false)}
+          onClick={() => {
+            setShowModal(false);
+            setSearchTerm("");
+          }}
         >
           <div
             className={styles.modal}
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className={styles.modalTitle}>{modalTitle}</h2>
+            <div className={styles.modalHeader}>
+              <h2>{modalTitle}</h2>
+              <button
+                className={styles.closeBtn}
+                onClick={() => {
+                  setShowModal(false);
+                  setSearchTerm("");
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className={styles.searchBox}>
+              <input
+                type="text"
+                placeholder="Search by category, user, or notes..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={styles.searchInput}
+              />
+            </div>
 
             <div className={styles.modalList}>
-              {modalTransactions.length === 0 && (
-                <p>No transactions found.</p>
+              {filteredTransactions.length === 0 && (
+                <p className={styles.emptyState}>No transactions found.</p>
               )}
 
-              {modalTransactions.map((t) => (
+              {filteredTransactions.map((t) => (
                 <div key={t.id} className={styles.modalRow}>
-                  <span>{formatDate(t.date)}</span>
-                  <span>{t.category}</span>
-                  <span className={t.type === "income" ? styles.income : styles.expense}>
-                    {t.type}
-                  </span>
-                  <span>{formatCurrency(t.amount)}</span>
-                  <span>
-                    {t.user
-                      ? `${t.user.firstName} ${t.user.lastName}`
-                      : "—"}
-                  </span>
+                  <div className={styles.rowContent}>
+                    <div className={styles.mainInfo}>
+                      <span className={styles.date}>{formatDate(t.date)}</span>
+                      <span className={styles.category}>{t.category}</span>
+                    </div>
+                    <div className={styles.secondaryInfo}>
+                      <span className={t.type === "income" ? styles.income : styles.expense}>
+                        {t.type.toUpperCase()}
+                      </span>
+                      <span className={styles.user}>
+                        {t.user ? `${t.user.firstName} ${t.user.lastName}` : "—"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className={`${styles.amount} ${t.type === "income" ? styles.income : styles.expense}`}>
+                    {fc(t.amount)}
+                  </div>
                 </div>
               ))}
             </div>
 
-            <p className={styles.note}>
-              For full control, visit the Transactions Management Page.
-            </p>
+            <div className={styles.modalFooter}>
+              <p className={styles.note}>
+                Showing {filteredTransactions.length} of {modalTransactions.length} transactions
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -193,16 +271,16 @@ export default function AdminTransactionsAnalyticsPage() {
 
 function Card({ label, value, onClick }) {
   return (
-    <div className={styles.card} onClick={onClick}>
+    <div className={`${styles.card} ${onClick ? styles.clickable : ""}`} onClick={onClick}>
       <h4>{label}</h4>
-      <p>{value}</p>
+      <p className={styles.cardValue}>{value}</p>
     </div>
   );
 }
 
-function formatCurrency(amount) {
-  if (amount == null) return "₱0";
-  return `₱${Number(amount).toLocaleString()}`;
+function formatCurrency(amount, symbol = "₱") {
+  if (amount == null) return `${symbol}0`;
+  return `${symbol}${Number(amount).toLocaleString()}`;
 }
 
 function formatDate(date) {

@@ -211,3 +211,90 @@
 .card {
   transition: all 0.3s ease;
 }
+
+/* Error message */
+.errorText {
+  display: block;
+  color: var(--color-delete);
+  font-size: 0.8rem;
+  margin-top: 4px;
+  margin-left: 4px;
+}
+
+/* Password hint */
+.passwordHint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: -12px;
+  margin-bottom: 12px;
+  margin-left: 4px;
+  opacity: 0.8;
+}
+
+.captchaWrap {
+  margin-bottom: 8px;
+}
+
+.captchaBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.captchaDigits {
+  font-family: 'Courier New', monospace;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 6px;
+  background: var(--surface-alt, #f0f0f0);
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #ccc);
+  user-select: none;
+  color: var(--text-main);
+}
+
+.captchaRefresh {
+  background: none;
+  border: 1px solid var(--border-color, #ccc);
+  border-radius: 6px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 6px 10px;
+  color: var(--text-main);
+  transition: 0.2s;
+}
+
+.captchaRefresh:hover {
+  background: var(--surface-alt, #f0f0f0);
+}
+
+.captchaInput {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #ccc);
+  background: var(--surface-alt, #f9f9f9);
+  color: var(--text-main);
+  font-size: 1rem;
+  letter-spacing: 4px;
+  text-align: center;
+}
+
+.captchaError {
+  color: var(--color-delete);
+  font-size: 0.8rem;
+  margin-top: 4px;
+  margin-bottom: 10px;
+  margin-left: 4px;
+}
+
+.captchaHint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: -6px;
+  margin-bottom: 12px;
+  margin-left: 4px;
+  opacity: 0.8;
+}

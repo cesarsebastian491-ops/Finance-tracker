@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./EditProfile.module.css";
 import { API_URL } from "../../../config";
@@ -6,8 +6,11 @@ import { API_URL } from "../../../config";
 export default function EditProfile() {
   const [user, setUser] = useState(null);
   const [form, setForm] = useState({});
+  const [initialForm, setInitialForm] = useState({});
   const navigate = useNavigate();
   const [showToast, setShowToast] = useState(false);
+  const fileInputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -21,25 +24,29 @@ export default function EditProfile() {
         const data = await res.json();
         if (data) {
           setUser(data);
-          setForm({
+          const formData = {
             firstName: data.firstName || "",
             lastName: data.lastName || "",
             username: data.username || "",
             email: data.email || "",
             phone: data.phone || "",
-          });
+          };
+          setForm(formData);
+          setInitialForm(formData);
         }
       } catch (err) {
         console.error("Failed to fetch profile:", err);
         // Fallback to localStorage
         setUser(stored);
-        setForm({
+        const formData = {
           firstName: stored.firstName || "",
           lastName: stored.lastName || "",
           username: stored.username || "",
           email: stored.email || "",
           phone: stored.phone || "",
-        });
+        };
+        setForm(formData);
+        setInitialForm(formData);
       }
     };
 
@@ -58,7 +65,7 @@ export default function EditProfile() {
       const token = storedUser?.access_token;
 
       const hasChanges = Object.keys(form).some(
-        key => form[key] !== user[key]
+        key => form[key] !== initialForm[key]
       );
 
       if (!hasChanges) {
@@ -68,7 +75,7 @@ export default function EditProfile() {
 
       const payload = {};
       ["firstName", "lastName", "username", "phone"].forEach(key => {
-        if (form[key] !== user[key]) payload[key] = form[key];
+        if (form[key] !== initialForm[key]) payload[key] = form[key];
       });
 
       const response = await fetch(`${API_URL}/users/me`, {
@@ -120,9 +127,62 @@ export default function EditProfile() {
         </button>
 
         <div className={styles.epCard}>
-          <div className={styles.epAvatar}>
-            {user?.username?.charAt(0)?.toUpperCase()}
+          <div className={styles.epAvatarWrap} onClick={() => fileInputRef.current?.click()}>
+            <div className={styles.epAvatar}>
+              {user?.profilePicture ? (
+                <img
+                  src={`${API_URL}${user.profilePicture}`}
+                  alt="Profile"
+                  className={styles.epAvatarImg}
+                />
+              ) : (
+                user?.username?.charAt(0)?.toUpperCase()
+              )}
+            </div>
+            <div className={styles.epAvatarOverlay}>
+              {uploading ? "Uploading..." : "Change Photo"}
+            </div>
           </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            style={{ display: "none" }}
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+
+              const storedUser = JSON.parse(localStorage.getItem("user"));
+              const token = storedUser?.access_token;
+
+              const formData = new FormData();
+              formData.append("file", file);
+
+              setUploading(true);
+              try {
+                const res = await fetch(`${API_URL}/users/me/profile-picture`, {
+                  method: "POST",
+                  headers: { Authorization: `Bearer ${token}` },
+                  body: formData,
+                });
+
+                if (!res.ok) throw new Error("Upload failed");
+
+                const updated = await res.json();
+                setUser(updated);
+                localStorage.setItem(
+                  "user",
+                  JSON.stringify({ ...updated, access_token: token })
+                );
+              } catch (err) {
+                console.error("Upload error:", err);
+                alert("Failed to upload profile picture");
+              } finally {
+                setUploading(false);
+                e.target.value = "";
+              }
+            }}
+          />
 
           <h2 className={styles.epTitle}>Edit Profile</h2>
 

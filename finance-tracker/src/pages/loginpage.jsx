@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./Login.module.css"; // NEW
 import { API_URL } from "../config";
@@ -24,6 +24,28 @@ export default function Login() {
     const [form, setForm] = useState({ email: "", password: "" });
     const [showPassword, setShowPassword] = useState(false);
     const [show2FACode, setShow2FACode] = useState(false);
+    const [captchaId, setCaptchaId] = useState("");
+    const [captchaCode, setCaptchaCode] = useState("");
+    const [captchaDisplay, setCaptchaDisplay] = useState("");
+    const [captchaInput, setCaptchaInput] = useState("");
+    const [captchaError, setCaptchaError] = useState("");
+
+    const loadCaptcha = useCallback(async () => {
+        try {
+            const res = await fetch(`${API_URL}/auth/captcha`);
+            const data = await res.json();
+            setCaptchaId(data.captchaId);
+            setCaptchaDisplay(data.captchaCode);
+            setCaptchaInput("");
+            setCaptchaError("");
+        } catch {
+            setCaptchaError("Failed to load CAPTCHA");
+        }
+    }, []);
+
+    useEffect(() => {
+        loadCaptcha();
+    }, [loadCaptcha]);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -32,39 +54,61 @@ export default function Login() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const res = await fetch(`${API_URL}/auth/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(form),
-        });
-
-        const data = await res.json();
-
-        if (data.requires2FA) {
-            setTempUserId(data.userId);
-            setStep("2fa");
+        if (!captchaInput) {
+            setCaptchaError("Please enter the CAPTCHA code.");
             return;
         }
 
-        if (data.success && data.user && data.access_token) {
-            localStorage.setItem(
-                "user",
-                JSON.stringify({
-                    ...data.user,
-                    access_token: data.access_token,
-                    sessionId: data.sessionId,
-                })
-            );
+        if (!captchaId) {
+            setCaptchaError("CAPTCHA not loaded. Please refresh.");
+            await loadCaptcha();
+            return;
+        }
 
-            setIsExiting(true);
-            setTimeout(() => {
-                if (data.user.role === "admin") navigate("/admin");
-                else if (data.user.role === "staff") navigate("/staff");
-                else navigate("/user/dashboard");
-            }, 600);
-        } else {
-            localStorage.removeItem("user");
-            alert("Invalid email or password");
+        setCaptchaError("");
+
+        const payload = { ...form, captchaId, captchaCode: captchaInput };
+
+        try {
+            const res = await fetch(`${API_URL}/auth/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await res.json();
+
+            if (data.requires2FA) {
+                setTempUserId(data.userId);
+                setStep("2fa");
+                return;
+            }
+
+            if (data.success && data.user && data.access_token) {
+                localStorage.setItem(
+                    "user",
+                    JSON.stringify({
+                        ...data.user,
+                        access_token: data.access_token,
+                        sessionId: data.sessionId,
+                    })
+                );
+
+                setIsExiting(true);
+                setTimeout(() => {
+                    if (data.user.role === "admin") navigate("/admin");
+                    else if (data.user.role === "staff") navigate("/staff");
+                    else navigate("/user/dashboard");
+                }, 600);
+            } else {
+                localStorage.removeItem("user");
+                await loadCaptcha();
+                setCaptchaError("");
+                alert(data.message || "Invalid email or password");
+            }
+        } catch (err) {
+            await loadCaptcha();
+            alert("Connection error. Please check the server and try again.");
         }
     };
 
@@ -154,6 +198,26 @@ export default function Login() {
                                         Forgot Password
                                     </button>
                                 </div>
+
+                                <div className={styles.captchaWrap}>
+                                    <div className={styles.captchaBox}>
+                                        <span className={styles.captchaDigits}>{captchaDisplay}</span>
+                                        <button type="button" className={styles.captchaRefresh} onClick={loadCaptcha}>↻</button>
+                                    </div>
+                                    <input
+                                        className={styles.captchaInput}
+                                        type="text"
+                                        maxLength={6}
+                                        placeholder="Enter 6-digit code"
+                                        value={captchaInput}
+                                        onChange={(e) => {
+                                            setCaptchaInput(e.target.value.replace(/\D/g, ''));
+                                            setCaptchaError("");
+                                        }}
+                                    />
+                                </div>
+
+                                {captchaError && <p className={styles.captchaError}>{captchaError}</p>}
 
                                 <button type="submit" className={styles.loginBtn}>
                                     Login

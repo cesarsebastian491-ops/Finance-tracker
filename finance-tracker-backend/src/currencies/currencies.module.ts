@@ -1,0 +1,20 @@
+import { Module, OnModuleInit } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Currency } from './currency.entity';
+import { CurrenciesService } from './currencies.service';
+import { CurrenciesController } from './currencies.controller';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([Currency])],
+  controllers: [CurrenciesController],
+  providers: [CurrenciesService],
+  exports: [CurrenciesService],
+})
+export class CurrenciesModule implements OnModuleInit {
+  constructor(private currenciesService: CurrenciesService) { }
+
+  async onModuleInit() {
+    // Seed currencies on app startup
+    await this.currenciesService.seedCurrencies();
+  }
+}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
+import { API_URL } from "../../../../config";
 import styles from "./AnalyticsDashboard.module.css";
 
 export default function AnalyticsDashboard() {

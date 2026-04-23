@@ -1,12 +1,29 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
+import { createPortal } from "react-dom";
 import styles from "./AddIncomeModal.module.css";
+import { API_URL } from "../config";
+import { CurrencyContext } from "../context/CurrencyContext";
+
+const DEFAULT_INCOME_CATEGORIES = [
+    "Salary",
+    "Freelance",
+    "Business",
+    "Investment",
+    "Rental",
+    "Bonus",
+    "Gift",
+    "Refund",
+    "Other",
+];
 
 export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
+    const { activeCurrency } = useContext(CurrencyContext);
     const [showChargesModal, setShowChargesModal] = useState(false);
     const [showRecurringModal, setShowRecurringModal] = useState(false);
 
     const [form, setForm] = useState({
         source: "",
+        category: "",
         date: "",
         amount: "",
         description: "",
@@ -20,16 +37,44 @@ export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
         // ⭐ Recurring
         isRecurring: false,
         recurringType: "",
-        recurringEndDate: ""
+        recurringEndDate: "",
+        nextDueDate: ""
     });
 
     const [errors, setErrors] = useState({});
+    const [categoryOptions, setCategoryOptions] = useState(DEFAULT_INCOME_CATEGORIES);
+
+    useEffect(() => {
+        if (!open) return;
+
+        async function loadCategories() {
+            try {
+                const res = await fetch(`${API_URL}/transactions/categories?type=income`);
+                const data = await res.json();
+
+                if (Array.isArray(data) && data.length > 0) {
+                    const names = data
+                        .map((item) => item?.name)
+                        .filter(Boolean);
+
+                    setCategoryOptions(names.length > 0 ? names : DEFAULT_INCOME_CATEGORIES);
+                } else {
+                    setCategoryOptions(DEFAULT_INCOME_CATEGORIES);
+                }
+            } catch {
+                setCategoryOptions(DEFAULT_INCOME_CATEGORIES);
+            }
+        }
+
+        loadCategories();
+    }, [open]);
 
     // ⭐ Prefill when editing
     useEffect(() => {
         if (editData) {
             setForm({
                 source: editData.source || "",
+                category: editData.category || "",
                 date: editData.date || "",
                 amount: editData.amount || "",
                 description: editData.description || "",
@@ -41,11 +86,13 @@ export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
 
                 isRecurring: editData.isRecurring === 1,
                 recurringType: editData.recurringType || "",
-                recurringEndDate: editData.recurringEndDate || ""
+                recurringEndDate: editData.recurringEndDate || "",
+                nextDueDate: editData.nextDueDate || ""
             });
         } else {
             setForm({
                 source: "",
+                category: "",
                 date: "",
                 amount: "",
                 description: "",
@@ -55,7 +102,8 @@ export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
                 otherCharge: "",
                 isRecurring: false,
                 recurringType: "",
-                recurringEndDate: ""
+                recurringEndDate: "",
+                nextDueDate: ""
             });
         }
 
@@ -101,7 +149,8 @@ export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
     function validate() {
         const newErrors = {};
 
-        if (!form.source.trim()) newErrors.source = "Income name is required";
+        if (!form.source.trim()) newErrors.source = "Income title is required";
+        if (!form.category) newErrors.category = "Category is required";
         if (!form.date) newErrors.date = "Date is required";
         if (!form.amount || Number(form.amount) <= 0)
             newErrors.amount = "Amount must be greater than 0";
@@ -124,6 +173,7 @@ export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
         const data = {
             id: editData?.id,
             source: form.source,
+            category: form.category,
             date: form.date,
             amount: Number(form.amount),
             description: form.description,
@@ -145,7 +195,7 @@ export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
         onClose();
     }
 
-    return (
+    return createPortal(
         <div className={styles.incomemodalOverlay} onClick={onClose}>
             <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
                 <h2>{editData ? "Edit Income" : "Add Income"}</h2>
@@ -154,7 +204,7 @@ export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
 
                     {/* INCOME */}
                     <div className={styles.modalSection}>
-                        <label>Income</label>
+                        <label>Income Title</label>
                         <input
                             name="source"
                             type="text"
@@ -163,6 +213,21 @@ export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
                             placeholder="e.g. Salary"
                         />
                         {errors.source && <p className={styles.errorText}>{errors.source}</p>}
+                    </div>
+
+                    <div className={styles.modalSection}>
+                        <label>Category</label>
+                        <select
+                            name="category"
+                            value={form.category}
+                            onChange={handleChange}
+                        >
+                            <option value="">Select category</option>
+                            {categoryOptions.map((cat) => (
+                                <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                        </select>
+                        {errors.category && <p className={styles.errorText}>{errors.category}</p>}
                     </div>
 
                     {/* DATE */}
@@ -179,7 +244,7 @@ export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
 
                     {/* AMOUNT */}
                     <div className={styles.modalSection}>
-                        <label>Amount</label>
+                        <label>Amount ({activeCurrency?.symbol})</label>
                         <input
                             name="amount"
                             type="number"
@@ -262,7 +327,7 @@ export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
                         </div>
 
                         <div className={styles.modalSection}>
-                            <label>Other Charge</label>
+                            <label>Other Charges</label>
                             <input type="number" name="otherCharge" value={form.otherCharge} onChange={handleChange} />
                         </div>
 
@@ -304,6 +369,22 @@ export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
                         </div>
 
                         <div className={styles.modalSection}>
+                            <label>Next Due Date</label>
+                            <input
+                                type="date"
+                                name="nextDueDate"
+                                value={form.nextDueDate}
+                                onChange={(e) =>
+                                    setForm({
+                                        ...form,
+                                        nextDueDate: e.target.value,
+                                        isRecurring: true
+                                    })
+                                }
+                            />
+                        </div>
+
+                        <div className={styles.modalSection}>
                             <label>End Date (optional)</label>
                             <input
                                 type="date"
@@ -327,6 +408,7 @@ export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
                     </div>
                 </div>
             )}
-        </div>
+        </div>,
+        document.body
     );
 }

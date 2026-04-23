@@ -27,10 +27,10 @@ export default function SystemDashboard() {
           <p>View server status, uptime, and diagnostics.</p>
         </NavLink>
 
-        {/* <NavLink to="/admin/system/account" className={styles.card}>
+        <NavLink to="/admin/system/profile" className={styles.card}>
           <h3>Admin Account</h3>
-          <p>Update your admin profile and credentials.</p>
-        </NavLink> */}
+          <p>Update your admin profile details.</p>
+        </NavLink>
       </div>
     </div>
   );

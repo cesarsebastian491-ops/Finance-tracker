@@ -45,10 +45,26 @@
   font-size: 14px;
 }
 
+.runningTable tr.incomeRow {
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.runningTable tr.expenseRow {
+  background: rgba(239, 68, 68, 0.08);
+}
+
 /* Hover row */
 .runningTable tr:hover {
   background: var( --surface-alt);
   transition: background 0.15s ease;
+}
+
+.runningTable tr.incomeRow:hover {
+  background: rgba(34, 197, 94, 0.14);
+}
+
+.runningTable tr.expenseRow:hover {
+  background: rgba(239, 68, 68, 0.14);
 }
 
 

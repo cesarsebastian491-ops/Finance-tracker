@@ -291,3 +291,68 @@
 .card {
   transition: all 0.3s ease;
 }
+
+.captchaWrap {
+  margin-top: 4px;
+}
+
+.captchaBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.captchaDigits {
+  font-family: 'Courier New', monospace;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 6px;
+  background: var(--surface-alt, #f0f0f0);
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #ccc);
+  user-select: none;
+  color: var(--text-main);
+}
+
+.captchaRefresh {
+  background: none;
+  border: 1px solid var(--border-color, #ccc);
+  border-radius: 6px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 6px 10px;
+  color: var(--text-main);
+  transition: 0.2s;
+}
+
+.captchaRefresh:hover {
+  background: var(--surface-alt, #f0f0f0);
+}
+
+.captchaInput {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #ccc);
+  background: var(--surface-alt, #f9f9f9);
+  color: var(--text-main);
+  font-size: 1rem;
+  letter-spacing: 4px;
+  text-align: center;
+}
+
+.captchaError {
+  margin-top: 4px;
+  margin-bottom: 4px;
+  color: var(--color-delete);
+  font-size: 0.8rem;
+}
+
+.captchaHint {
+  margin-top: -2px;
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}

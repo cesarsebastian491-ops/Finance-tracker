@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Transaction } from './entities/transaction.entity';
+import { Category } from './entities/category.entity';
 import { TransactionsService } from './transactions.service';
 import { TransactionsController } from './transactions.controller';
 import { LogsModule } from '../logs/logs.module';
 import { RecurringService } from './recurring.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Transaction]), LogsModule],
+  imports: [TypeOrmModule.forFeature([Transaction, Category]), LogsModule],
   controllers: [TransactionsController],
   providers: [TransactionsService , RecurringService ],
   exports: [TransactionsService],

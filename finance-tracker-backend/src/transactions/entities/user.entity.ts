@@ -71,4 +71,7 @@ export class User {
 
   @Column({ type: 'timestamp', nullable: true })
   lastActive!: Date;
+
+  @Column({ type: 'text', nullable: true })
+  profilePicture!: string | null;
 }

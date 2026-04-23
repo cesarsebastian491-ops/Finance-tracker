@@ -37,7 +37,15 @@ export default function ViewProfile() {
 
             <div className={styles.vpCard}>
                 <div className={styles.vpAvatar}>
-                    {user?.username?.charAt(0)?.toUpperCase()}
+                    {user?.profilePicture ? (
+                        <img
+                            src={`${API_URL}${user.profilePicture}`}
+                            alt="Profile"
+                            className={styles.vpAvatarImg}
+                        />
+                    ) : (
+                        user?.username?.charAt(0)?.toUpperCase()
+                    )}
                 </div>
 
                 <h2 className={styles.vpName}>

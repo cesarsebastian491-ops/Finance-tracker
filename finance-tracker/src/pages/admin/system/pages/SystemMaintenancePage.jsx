@@ -1,19 +1,20 @@
 import styles from "./SystemMaintenancePage.module.css";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { API_URL } from "../../../../config";
 import { Navigate } from "react-router-dom";
 
 export default function SystemMaintenancePage() {
   const user = JSON.parse(localStorage.getItem("user"));
 
+  const [modal, setModal] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const token = user?.access_token;
+
   // FRONTEND ADMIN-ONLY GUARD
   if (!user || user.role !== "admin") {
     return <Navigate to="/not-authorized" />;
   }
-
-  const [modal, setModal] = useState(null);
-
-  const token = user?.access_token;
 
   async function handleBackup() {
     const first = confirm("Create a full system backup?");
@@ -22,23 +23,33 @@ export default function SystemMaintenancePage() {
     const second = confirm("Proceed with backup?");
     if (!second) return;
 
-    const res = await fetch(`${API_URL}/maintenance/backup`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    try {
+      const res = await fetch(`${API_URL}/maintenance/backup`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Backup failed: ${errorText || res.statusText}`);
+      }
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "backup.json";
-    a.click();
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
 
-    window.URL.revokeObjectURL(url);
-    setModal(null);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "backup.json";
+      a.click();
+
+      window.URL.revokeObjectURL(url);
+      setModal(null);
+      alert("Backup downloaded successfully!");
+    } catch (err) {
+      alert(err.message || "Failed to create backup");
+    }
   }
 
   async function handleClearLogs() {
@@ -84,25 +95,52 @@ export default function SystemMaintenancePage() {
     if (!file) return;
 
     const first = confirm("Are you sure you want to restore this backup?");
-    if (!first) return;
+    if (!first) {
+      // Reset file input so the same file can be selected again
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
 
     const second = confirm("FINAL WARNING: Restoring will overwrite ALL current data. Continue?");
-    if (!second) return;
+    if (!second) {
+      // Reset file input so the same file can be selected again
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
 
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await fetch(`${API_URL}/maintenance/restore`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
+    try {
+      const res = await fetch(`${API_URL}/maintenance/restore`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
 
-    const data = await res.json();
-    alert(data.message);
-    setModal(null);
+      let data;
+      try {
+        data = await res.json();
+      } catch (err) {
+        // Not JSON (e.g. 500 error with HTML response)
+        throw new Error("Restore failed: Invalid server response.");
+      }
+
+      if (!res.ok) {
+        throw new Error(data?.message || "Restore failed: Internal server error.");
+      }
+
+      alert(data.message || "System restored from backup.");
+      setModal(null);
+      // Reset file input so the same file can be selected again
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } catch (err) {
+      alert(err.message || "Restore failed: Unknown error.");
+      // Reset file input so the same file can be selected again
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   }
 
   return (
@@ -119,7 +157,7 @@ export default function SystemMaintenancePage() {
           <p className={styles.cardDescription}>
             Create a full backup of all system data.
           </p>
-          <button className={styles.primaryButton} onClick={handleBackup}>
+          <button className={styles.primaryButton} onClick={() => setModal("backup")}>
             Start Backup
           </button>
         </div>
@@ -144,7 +182,7 @@ export default function SystemMaintenancePage() {
           <p className={styles.cardDescription}>
             Permanently delete all system activity logs.
           </p>
-          <button className={styles.dangerButton} onClick={handleClearLogs}>
+          <button className={styles.dangerButton} onClick={() => setModal("clearLogs")}> 
             Clear Logs
           </button>
         </div>
@@ -155,7 +193,7 @@ export default function SystemMaintenancePage() {
           <p className={styles.cardDescription}>
             Delete all financial transactions. This cannot be undone.
           </p>
-          <button className={styles.dangerButton} onClick={handleClearTransactions}>
+          <button className={styles.dangerButton} onClick={() => setModal("clearTransactions")}> 
             Clear Transactions
           </button>
         </div>
@@ -170,7 +208,7 @@ export default function SystemMaintenancePage() {
               This will generate a full system backup.
             </p>
 
-            <button className={styles.primaryButton}>Start Backup</button>
+            <button className={styles.primaryButton} onClick={handleBackup}>Start Backup</button>
             <button className={styles.cancelButton} onClick={() => setModal(null)}>
               Cancel
             </button>
@@ -187,15 +225,27 @@ export default function SystemMaintenancePage() {
             </p>
 
             <input
+              ref={fileInputRef}
               type="file"
               accept=".json"
               onChange={handleRestore}
               className={styles.fileInput}
+              style={{ display: 'none' }}
             />
 
             <button
+              className={styles.primaryButton}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              Choose Backup File
+            </button>
+
+            <button
               className={styles.cancelButton}
-              onClick={() => setModal(null)}
+              onClick={() => {
+                setModal(null);
+                if (fileInputRef.current) fileInputRef.current.value = "";
+              }}
             >
               Cancel
             </button>
@@ -211,7 +261,7 @@ export default function SystemMaintenancePage() {
               This action cannot be undone.
             </p>
 
-            <button className={styles.dangerButton}>Clear Logs</button>
+            <button className={styles.dangerButton} onClick={handleClearLogs}>Clear Logs</button>
             <button className={styles.cancelButton} onClick={() => setModal(null)}>
               Cancel
             </button>
@@ -227,7 +277,7 @@ export default function SystemMaintenancePage() {
               This will permanently delete all financial records.
             </p>
 
-            <button className={styles.dangerButton}>Clear Transactions</button>
+            <button className={styles.dangerButton} onClick={handleClearTransactions}>Clear Transactions</button>
             <button className={styles.cancelButton} onClick={() => setModal(null)}>
               Cancel
             </button>

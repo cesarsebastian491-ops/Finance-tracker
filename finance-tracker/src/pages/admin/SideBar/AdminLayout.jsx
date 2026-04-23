@@ -12,6 +12,7 @@ export default function AdminLayout() {
         <NavLink to="/admin/dashboard" className="admin-link">Dashboard</NavLink>
         <NavLink to="/admin/management" className="admin-link">Management</NavLink>
         <NavLink to="/admin/system" className="admin-link">System</NavLink>
+        {/* <NavLink to="/admin/system/profile" className="admin-link">Profile</NavLink> */}
         <NavLink to="/admin/analytics" className="admin-link">Analytics</NavLink>
 
         <button

@@ -1,14 +1,21 @@
 import {
   Controller,
   Put,
+  Post,
   Param,
   Patch,
   Body,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
   Req,
   ParseIntPipe,
   Get,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
 import { UsersService } from './users.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.decorator';
@@ -19,12 +26,59 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 export class UsersController {
   constructor(private readonly usersService: UsersService) { }
 
+  // ADMIN — create a new user (no CAPTCHA required)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
+  @Post('admin/create')
+  async adminCreateUser(@Body() dto) {
+    const user = await this.usersService.createUser(dto);
+    return { success: true, user };
+  }
+
+  // USER — can get their own data
+  @UseGuards(AuthGuard('jwt'))
+  @Get('me')
+  getSelf(@Req() req) {
+    return this.usersService.findById(req.user.id);
+  }
+
   // USER — can edit ONLY themselves
   @UseGuards(AuthGuard('jwt'))
   @Put('me')
   updateSelf(@Req() req, @Body() dto: UpdateUserDto) {
     console.log("USER:", req.user);
     return this.usersService.updateSelf(req.user.id, dto);
+  }
+
+  // USER — upload profile picture
+  @UseGuards(AuthGuard('jwt'))
+  @Post('me/profile-picture')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: join(process.cwd(), 'uploads', 'avatars'),
+        filename: (_req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname).toLowerCase();
+          cb(null, `avatar-${uniqueSuffix}${ext}`);
+        },
+      }),
+      fileFilter: (_req, file, cb) => {
+        const allowed = ['.jpg', '.jpeg', '.png', '.webp'];
+        const ext = extname(file.originalname).toLowerCase();
+        if (allowed.includes(ext)) {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException('Only .jpg, .jpeg, .png, .webp files are allowed'), false);
+        }
+      },
+      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    }),
+  )
+  async uploadProfilePicture(@Req() req, @UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No file uploaded');
+    const picturePath = `/uploads/avatars/${file.filename}`;
+    return this.usersService.updateProfilePicture(req.user.id, picturePath);
   }
   @UseGuards(AuthGuard('jwt'))
   @Put('change-password')
@@ -114,8 +168,8 @@ export class UsersController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-@Patch('last-active')
-updateLastActive(@Req() req) {
-  return this.usersService.updateLastActive(req.user.id);
-}
+  @Patch('last-active')
+  updateLastActive(@Req() req) {
+    return this.usersService.updateLastActive(req.user.id);
+  }
 }

@@ -9,6 +9,8 @@ import { SessionsModule } from '../sessions/sessions.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../transactions/entities/user.entity';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { CaptchaService } from './captcha.service';
+import { CaptchaGuard } from './captcha.guard';
 
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { LastActiveInterceptor } from './last-active.interceptor';
@@ -29,6 +31,8 @@ import { LastActiveInterceptor } from './last-active.interceptor';
     AuthService,
     JwtStrategy,
     JwtAuthGuard,
+    CaptchaService,
+    CaptchaGuard,
     {
       provide: APP_INTERCEPTOR,
       useClass: LastActiveInterceptor,

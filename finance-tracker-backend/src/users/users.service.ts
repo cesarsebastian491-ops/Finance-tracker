@@ -28,6 +28,14 @@ export class UsersService {
     );
   }
 
+  async findById(id: number) {
+    const user = await this.usersRepo.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
+
   async register(
     username: string,
     email: string,
@@ -36,6 +44,41 @@ export class UsersService {
     lastName: string,
     phone: string,
   ) {
+    // Check if email already exists
+    const existingEmail = await this.usersRepo.findOne({
+      where: { email },
+    });
+
+    if (existingEmail) {
+      throw new Error('Email already registered');
+    }
+
+    // Check if username already exists
+    const existingUsername = await this.usersRepo.findOne({
+      where: { username },
+    });
+
+    if (existingUsername) {
+      throw new Error('Username already taken');
+    }
+
+    // Validate password strength
+    if (password.length < 8) {
+      throw new Error('Password must be at least 8 characters long');
+    }
+    if (!/[A-Z]/.test(password)) {
+      throw new Error('Password must contain at least one uppercase letter');
+    }
+    if (!/[a-z]/.test(password)) {
+      throw new Error('Password must contain at least one lowercase letter');
+    }
+    if (!/[0-9]/.test(password)) {
+      throw new Error('Password must contain at least one number');
+    }
+    if (!/[!@#$%^&*(),.?\":{}|<>]/.test(password)) {
+      throw new Error('Password must contain at least one special character');
+    }
+
     const hash = await bcrypt.hash(password, 10);
 
     const user = this.usersRepo.create({
@@ -56,9 +99,6 @@ export class UsersService {
       where: { email },
     });
 
-    console.log("LOGIN ATTEMPT:", email, password);
-    console.log("FOUND USER:", user);
-
     // CASE 1: Email not found
     if (!user) {
       await this.logsService.create({
@@ -70,9 +110,20 @@ export class UsersService {
       return null;
     }
 
+    // CASE 2: Account disabled
+    if (user.status === 'disabled') {
+      await this.logsService.create({
+        userId: user.id,
+        action: 'FAILED_LOGIN',
+        message: `Login attempt on disabled account: ${email}`,
+      });
+
+      return { disabled: true };
+    }
+
     const isValid = await bcrypt.compare(password, user.password);
 
-    // CASE 2: Wrong password
+    // CASE 3: Wrong password
     if (!isValid) {
       await this.logsService.create({
         userId: user.id,
@@ -94,6 +145,9 @@ export class UsersService {
   }
 
   async createUser(dto) {
+    if (dto.password) {
+      dto.password = await bcrypt.hash(dto.password, 10);
+    }
     const user = await this.usersRepo.save(dto);
 
     await this.logsService.create({
@@ -191,6 +245,11 @@ export class UsersService {
     return this.usersRepo.findOne({ where: { id: userId } });
   }
 
+  async updateProfilePicture(userId: number, picturePath: string) {
+    await this.usersRepo.update(userId, { profilePicture: picturePath });
+    return this.usersRepo.findOne({ where: { id: userId } });
+  }
+
   async generateTwoFactorSecret(userId: number) {
     const user = await this.usersRepo.findOne({ where: { id: userId } });
 
@@ -271,13 +330,16 @@ export class UsersService {
 
   // ⭐ Clear all users (used by restore)
   async clearAll() {
-    await this.usersRepo.clear();
+    await this.usersRepo.createQueryBuilder().delete().where('1=1').execute();
   }
 
   // ⭐ Restore users from backup (used by restore)
   async replaceAll(users: any[]) {
-    if (!users || users.length === 0) return;
-    await this.usersRepo.save(users);
+    await this.usersRepo.createQueryBuilder().delete().where('1=1').execute();
+    if (users && users.length > 0) {
+      const plainUsers = users.map(({ transactions, logs, ...user }) => user);
+      await this.usersRepo.save(plainUsers);
+    }
   }
 
   async changePassword(userId: number, currentPassword: string, newPassword: string) {

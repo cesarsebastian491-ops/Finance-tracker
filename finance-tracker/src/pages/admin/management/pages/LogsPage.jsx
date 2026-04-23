@@ -36,9 +36,13 @@ export default function LogsPage() {
 
     // FILTERING
     let filtered = logs
-        .filter((log) =>
-            log.message.toLowerCase().includes(search.toLowerCase())
-        )
+        .filter((log) => {
+            const term = search.toLowerCase();
+            return (
+                log.message.toLowerCase().includes(term) ||
+                (log.user?.username || '').toLowerCase().includes(term)
+            );
+        })
         .filter((log) => (actionFilter === "all" ? true : log.action === actionFilter))
         .filter((log) => (userFilter === "all" ? true : log.userId === Number(userFilter)))
         .filter((log) => {
@@ -101,9 +105,9 @@ export default function LogsPage() {
                     className={styles.select}
                 >
                     <option value="all">All Users</option>
-                    {[...new Set(logs.map((l) => l.userId))].map((id) => (
+                    {[...new Map(logs.map((l) => [l.userId, l.user?.username || `User ${l.userId}`])).entries()].map(([id, name]) => (
                         <option key={id} value={id}>
-                            User  {id}
+                            {name}
                         </option>
                     ))}
                 </select>
@@ -130,7 +134,8 @@ export default function LogsPage() {
                         <tr>
                             <th onClick={() => handleSort("id")}>ID</th>
                             <th onClick={() => handleSort("message")}>Message</th>
-                            <th onClick={() => handleSort("userId")}>User</th>
+                            <th>Username</th>
+                            <th onClick={() => handleSort("userId")}>User ID</th>
                             <th onClick={() => handleSort("action")}>Action</th>
                             <th onClick={() => handleSort("timestamp")}>Timestamp</th>
                         </tr>
@@ -141,6 +146,7 @@ export default function LogsPage() {
                             <tr key={log.id} className={styles[`action_${log.action}`]}>
                                 <td>{log.id}</td>
                                 <td>{log.message}</td>
+                                <td>{log.user?.username || '—'}</td>
                                 <td>{log.userId}</td>
                                 <td>{log.action}</td>
                                 <td>{new Date(log.timestamp).toLocaleString()}</td>

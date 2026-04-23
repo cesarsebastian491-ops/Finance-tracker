@@ -1,0 +1,303 @@
+.container {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+.title {
+  margin: 0 0 14px;
+  font-size: 24px;
+  color: var(--text-main);
+  font-family: var(--font-headline);
+  font-weight: 700;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
+}
+
+.card:nth-child(2) {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.card:nth-child(3) {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  display: block;
+  margin-bottom: 6px;
+  margin-top: 0;
+  font-weight: 600;
+  color: var(--text-main);
+  font-family: var(--font-body);
+}
+
+.input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--surface-alt);
+  color: var(--text-main);
+  font-size: 14px;
+  font-family: var(--font-body);
+}
+
+.saveButton {
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: var(--text-light);
+  cursor: pointer;
+  font-weight: 600;
+  font-family: var(--font-body);
+}
+
+.saveButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.dangerButton {
+  margin-top: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--color-delete);
+  color: var(--text-light);
+  cursor: pointer;
+  font-weight: 600;
+  font-family: var(--font-body);
+}
+
+.successText {
+  color: var(--color-success);
+  margin: 0 0 8px;
+  font-family: var(--font-body);
+}
+
+.subTitle {
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: var(--text-main);
+  font-family: var(--font-headline);
+  font-weight: 600;
+}
+
+.infoText {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+}
+
+@media (max-width: 768px) {
+  .cardsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .card:nth-child(2) {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .card:nth-child(3) {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+.sessionTableWrapper {
+  max-height: 340px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-radius: 10px;
+  margin-top: 12px;
+}
+
+.sessionTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+}
+
+.th {
+  text-align: left;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--surface-alt);
+  font-family: var(--font-body);
+}
+
+.td {
+  padding: 10px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-family: var(--font-body);
+}
+
+.sessionRow:hover {
+  background: var(--surface-alt);
+}
+
+.currentSession {
+  background: var(--color-success-light);
+}
+
+.revokeButton {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: var(--color-delete-light);
+  color: var(--color-delete);
+  font-family: var(--font-body);
+  font-weight: 600;
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalCard {
+  width: min(420px, 92vw);
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 18px;
+  border: 1px solid var(--border-color);
+}
+
+.modalTitle {
+  margin: 0 0 10px;
+  color: var(--text-main);
+  font-family: var(--font-headline);
+  font-weight: 600;
+}
+
+.modalText {
+  color: var(--text-muted);
+  font-family: var(--font-body);
+}
+
+.qrImage {
+  width: 180px;
+  height: 180px;
+  display: block;
+  margin: 8px auto;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.codeInput {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin: 10px 0;
+  color: var(--text-main);
+  background: var(--surface-alt);
+  font-family: var(--font-body);
+}
+
+.cancelButton {
+  margin-top: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--surface-alt);
+  color: var(--text-main);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-weight: 600;
+}
+
+.warningText {
+  color: var(--color-delete);
+  font-family: var(--font-body);
+  margin: 10px 0;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 24px;
+  margin-bottom: 12px;
+}
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.infoLabel {
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: var(--font-body);
+}
+
+.infoValue {
+  color: var(--text-main);
+  font-size: 15px;
+  font-weight: 500;
+  font-family: var(--font-body);
+}
+
+@media (max-width: 768px) {
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+}

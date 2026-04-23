@@ -5,6 +5,7 @@ import SystemSettingsPage from "./pages/SystemSettingsPage";
 import SystemSecurityPage from "./pages/SystemSecurityPage";
 import SystemMaintenancePage from "./pages/SystemMaintenancePage";
 import SystemHealthPage from "./pages/SystemHealthPage";
+import SystemAccountPage from "./pages/SystemAccountPage";
 
 
 export default function SystemPage() {
@@ -16,9 +17,9 @@ export default function SystemPage() {
         <NavLink to="/admin/system" end>Dashboard</NavLink>
         <NavLink to="/admin/system/settings">Settings</NavLink>
         <NavLink to="/admin/system/security">Security</NavLink>
+        <NavLink to="/admin/system/profile">Profile</NavLink>
         <NavLink to="/admin/system/maintenance">Maintenance</NavLink>
         <NavLink to="/admin/system/health">Health</NavLink>
-        {/* <NavLink to="/admin/system/account">Account</NavLink> */}
       </div>
 
       <div className="management-content">
@@ -27,9 +28,9 @@ export default function SystemPage() {
 
           <Route path="settings" element={<SystemSettingsPage />} />
           <Route path="security" element={<SystemSecurityPage />} />
+          <Route path="profile" element={<SystemAccountPage />} />
           <Route path="maintenance" element={<SystemMaintenancePage />} />
           <Route path="health" element={<SystemHealthPage />} />
-          {/* <Route path="account" element={<SystemAccountPage />} /> */}
         </Routes>
       </div>
     </div>

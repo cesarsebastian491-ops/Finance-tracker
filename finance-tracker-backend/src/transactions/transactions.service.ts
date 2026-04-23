@@ -2,16 +2,141 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Transaction } from './entities/transaction.entity';
+import { Category } from './entities/category.entity';
 import { LogsService } from '../logs/logs.service';
-import { NotFoundException } from "@nestjs/common";
+import { BadRequestException, NotFoundException } from "@nestjs/common";
 
 @Injectable()
 export class TransactionsService {
+  private static readonly DEFAULT_EXPENSE_CATEGORIES = [
+    'Food',
+    'Groceries',
+    'Transport',
+    'Shopping',
+    'Bills',
+    'Entertainment',
+    'Others',
+  ];
+
+  private static readonly DEFAULT_INCOME_CATEGORIES = [
+    'Salary',
+    'Freelance',
+    'Business',
+    'Investment',
+    'Rental',
+    'Bonus',
+    'Gift',
+    'Refund',
+    'Other',
+  ];
+
   constructor(
     @InjectRepository(Transaction)
     private repo: Repository<Transaction>,
+    @InjectRepository(Category)
+    private categoryRepo: Repository<Category>,
     private readonly logsService: LogsService,
   ) { }
+
+  private async ensureDefaultCategories(): Promise<void> {
+    const defaults: Array<{ type: 'income' | 'expense'; name: string }> = [
+      ...TransactionsService.DEFAULT_EXPENSE_CATEGORIES.map((name) => ({ type: 'expense' as const, name })),
+      ...TransactionsService.DEFAULT_INCOME_CATEGORIES.map((name) => ({ type: 'income' as const, name })),
+    ];
+
+    for (const category of defaults) {
+      const exists = await this.categoryRepo.findOne({
+        where: { type: category.type, name: category.name },
+      });
+
+      if (!exists) {
+        await this.categoryRepo.save(
+          this.categoryRepo.create({
+            type: category.type,
+            name: category.name,
+            isActive: 1,
+          }),
+        );
+      }
+    }
+  }
+
+  private async ensureCategoryExists(name: string, type: 'income' | 'expense'): Promise<void> {
+    const cleanName = String(name || '').trim();
+    if (!cleanName) return;
+
+    const exists = await this.categoryRepo.findOne({ where: { name: cleanName, type } });
+    if (!exists) {
+      await this.categoryRepo.save(
+        this.categoryRepo.create({
+          name: cleanName,
+          type,
+          isActive: 1,
+        }),
+      );
+    } else if (exists.isActive === 0) {
+      exists.isActive = 1;
+      await this.categoryRepo.save(exists);
+    }
+  }
+
+  async getCategories(type?: 'income' | 'expense', includeInactive = false) {
+    await this.ensureDefaultCategories();
+
+    const where: any = type ? { type } : {};
+    if (!includeInactive) {
+      where.isActive = 1;
+    }
+    return this.categoryRepo.find({
+      where,
+      order: { name: 'ASC' },
+    });
+  }
+
+  async createCategory(name: string, type: 'income' | 'expense') {
+    if (!name || !type) return null;
+
+    const cleanName = String(name).trim();
+    if (!cleanName) return null;
+
+    await this.ensureCategoryExists(cleanName, type);
+    return this.categoryRepo.findOne({ where: { name: cleanName, type } });
+  }
+
+  async updateCategory(id: number, name: string, type: 'income' | 'expense') {
+    const category = await this.categoryRepo.findOne({ where: { id } });
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    const cleanName = String(name || '').trim();
+    if (!cleanName || !type) {
+      throw new BadRequestException('Category name and type are required');
+    }
+
+    const duplicate = await this.categoryRepo.findOne({ where: { name: cleanName, type } });
+    if (duplicate && duplicate.id !== category.id) {
+      throw new BadRequestException('Category already exists for this type');
+    }
+
+    category.name = cleanName;
+    category.type = type;
+    category.isActive = 1;
+
+    return this.categoryRepo.save(category);
+  }
+
+  async deleteCategory(id: number) {
+    const category = await this.categoryRepo.findOne({ where: { id } });
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    category.isActive = 0;
+    await this.categoryRepo.save(category);
+
+    return { success: true };
+  }
 
   create(data: Partial<Transaction>) {
     const transaction = this.repo.create(data);
@@ -70,6 +195,8 @@ export class TransactionsService {
     });
   }
   async addExpense(dto) {
+    await this.ensureCategoryExists(dto.category, 'expense');
+
     const expense = await this.repo.save({
       ...dto,
       tax: dto.tax ?? null,
@@ -80,6 +207,7 @@ export class TransactionsService {
       isRecurring: dto.isRecurring ?? false,
       recurringType: dto.recurringType ?? null,
       recurringEndDate: dto.recurringEndDate ?? null,
+      nextDueDate: dto.nextDueDate ?? null,
     });
 
     await this.logsService.create({
@@ -92,6 +220,8 @@ export class TransactionsService {
   }
 
   async updateExpense(id: number, dto) {
+    await this.ensureCategoryExists(dto.category, 'expense');
+
     await this.repo.update(id, {
       expense: dto.expense,
       category: dto.category,
@@ -108,6 +238,7 @@ export class TransactionsService {
       isRecurring: dto.isRecurring ?? false,
       recurringType: dto.recurringType ?? null,
       recurringEndDate: dto.recurringEndDate ?? null,
+      nextDueDate: dto.nextDueDate ?? null,
     });
 
     await this.logsService.create({
@@ -138,8 +269,14 @@ export class TransactionsService {
   }
 
   async addIncome(dto) {
+    const incomeTitle = dto.source || null;
+    const incomeCategory = dto.category || 'Other';
+    await this.ensureCategoryExists(incomeCategory, 'income');
+
     const income = await this.repo.save({
       ...dto,
+      source: incomeTitle,
+      category: incomeCategory,
       tax: dto.tax ?? null,
       serviceFee: dto.serviceFee ?? null,
       discount: dto.discount ?? null,
@@ -148,20 +285,27 @@ export class TransactionsService {
       isRecurring: dto.isRecurring ?? false,
       recurringType: dto.recurringType ?? null,
       recurringEndDate: dto.recurringEndDate ?? null,
+      nextDueDate: dto.nextDueDate ?? null,
     });
 
     await this.logsService.create({
       userId: dto.user.id,
       action: 'ADD_INCOME',
-      message: `Added income '${dto.source}' for $${dto.amount}`,
+      message: `Added income '${incomeTitle || 'Untitled'}' for $${dto.amount}`,
     });
 
     return income;
   }
 
   async updateIncome(id: number, dto) {
+    const incomeTitle = dto.source || null;
+    const incomeCategory = dto.category || 'Other';
+    await this.ensureCategoryExists(incomeCategory, 'income');
+
     await this.repo.update(id, {
       ...dto,
+      source: incomeTitle,
+      category: incomeCategory,
 
       tax: dto.tax ?? null,
       serviceFee: dto.serviceFee ?? null,
@@ -171,12 +315,13 @@ export class TransactionsService {
       isRecurring: dto.isRecurring ?? false,
       recurringType: dto.recurringType ?? null,
       recurringEndDate: dto.recurringEndDate ?? null,
+      nextDueDate: dto.nextDueDate ?? null,
     });
 
     await this.logsService.create({
       userId: dto.user.id,
       action: 'EDIT_INCOME',
-      message: `Updated income '${dto.source}'`,
+      message: `Updated income '${incomeTitle || 'Untitled'}'`,
     });
 
     return { success: true };
@@ -244,11 +389,15 @@ export class TransactionsService {
   }
 
   async clearAll() {
-    return this.repo.clear();
+    return this.repo.createQueryBuilder().delete().where('1=1').execute();
   }
 
   async replaceAll(newTransactions: any[]) {
-    await this.repo.clear();
-    return this.repo.save(newTransactions);
+    await this.repo.createQueryBuilder().delete().where('1=1').execute();
+    if (newTransactions && newTransactions.length > 0) {
+      const plainTransactions = newTransactions.map(({ user, ...t }) => t);
+      return this.repo.save(plainTransactions);
+    }
+    return [];
   }
 }

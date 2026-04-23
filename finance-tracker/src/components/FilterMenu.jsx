@@ -24,7 +24,7 @@ export default function FilterMenu({ onApplyFilters, transactions }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
-  const [dateFilter, setDateFilter] = useState("monthly");
+  const [dateFilter, setDateFilter] = useState("all");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [specificDate, setSpecificDate] = useState("");
@@ -95,7 +95,7 @@ export default function FilterMenu({ onApplyFilters, transactions }) {
 
   function resetFilters() {
     const resetState = {
-      selectedDateFilter: "monthly",
+      selectedDateFilter: "all",
       selectedCustomStart: "",
       selectedCustomEnd: "",
       selectedSpecificDate: "",
@@ -107,8 +107,8 @@ export default function FilterMenu({ onApplyFilters, transactions }) {
     setSpecificDate(resetState.selectedSpecificDate);
 
     onApplyFilters({
-      filtered: applyDateFilter(resetState),
-      filterType: "monthly",
+      filtered: transactions,
+      filterType: "all",
       customStart: "",
       customEnd: "",
       specificDate: ""
@@ -132,7 +132,8 @@ export default function FilterMenu({ onApplyFilters, transactions }) {
               onChange={(e) => setDateFilter(e.target.value)}
               className={styles.select}
             >
-              <option value="monthly">Monthly (Default)</option>
+              <option value="all">All Time (Default)</option>
+              <option value="monthly">This Month</option>
               <option value="7days">Last 7 Days</option>
               <option value="1month">Last 1 Month</option>
               <option value="1year">Last 1 Year</option>

@@ -83,3 +83,21 @@
   font-weight: 700;
   color: #111827;
 }
+
+/* Loading state */
+.loading {
+  padding: 40px 20px;
+  text-align: center;
+  font-size: 16px;
+  color: #6b7280;
+}
+
+/* Error state */
+.error {
+  padding: 20px;
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  text-align: center;
+}

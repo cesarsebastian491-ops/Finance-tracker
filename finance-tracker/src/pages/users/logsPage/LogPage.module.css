@@ -12,7 +12,8 @@
 
 
 .tableWrapper {
-  max-height: 400px;
+  max-height: calc(100vh - 300px);
+  min-height: 400px;
   overflow-y: auto;
   border: 1px solid var(--border-color);
   border-radius: 10px;

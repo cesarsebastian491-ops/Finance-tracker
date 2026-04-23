@@ -13,7 +13,7 @@ export class Transaction {
   @Column({ nullable: true })
   expense: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, default: 'Other' })
   category: string;
 
   @Column({ nullable: true })
@@ -57,6 +57,9 @@ export class Transaction {
   // ⭐ REQUIRED FOR AUTOMATION
   @Column({ type: 'date', nullable: true })
   lastGenerated: Date | null;
+
+  @Column({ type: 'date', nullable: true })
+  nextDueDate: Date | null;
 
   @ManyToOne(() => User, (user) => user.transactions, { nullable: true })
   user: User;

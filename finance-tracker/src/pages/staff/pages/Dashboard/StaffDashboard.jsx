@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import styles from "./staffDashboard.module.css";
 import "../../Components/staffTheme.css";
 import { API_URL } from "../../../../config";
+import { CurrencyContext } from "../../../../context/CurrencyContext";
 import StaffMonthlyPie from "../../Components/StaffMonthlyPie";
 
 export default function StaffDashboard() {
+  const { activeCurrency } = useContext(CurrencyContext);
   const [recentTransactions, setRecentTransactions] = useState([]);
-  const [categoryBreakdown, setCategoryBreakdown] = useState([]);
-  const [recentLogs, setRecentLogs] = useState([]);
   const [monthlyData, setMonthlyData] = useState(null);
   const [summary, setSummary] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,29 +25,22 @@ export default function StaffDashboard() {
       try {
         const headers = { Authorization: `Bearer ${token}` };
 
-        const [summaryRes, transRes, logsRes, catRes] = await Promise.all([
+        const [summaryRes, transRes] = await Promise.all([
           fetch(`${API_URL}/analytics/staff/summary`, { headers }),
           fetch(`${API_URL}/analytics/staff/recent-transactions`, { headers }),
-          fetch(`${API_URL}/analytics/staff/recent-logs`, { headers }),
-          fetch(`${API_URL}/analytics/staff/category-breakdown`, { headers }),
         ]);
 
-        if (!summaryRes.ok || !transRes.ok || !logsRes.ok || !catRes.ok) {
+        if (!summaryRes.ok || !transRes.ok) {
           throw new Error("Failed to fetch dashboard data");
         }
 
-        const [summaryJson, transJson, logsJson, catJson] = await Promise.all([
+        const [summaryJson, transJson] = await Promise.all([
           summaryRes.json(),
           transRes.json(),
-          logsRes.json(),
-          catRes.json(),
         ]);
 
         setSummary(summaryJson);
         setRecentTransactions(Array.isArray(transJson) ? transJson : []);
-        setRecentLogs(Array.isArray(logsJson) ? logsJson : []);
-        // endpoint returns array directly (not wrapped in { categoryBreakdown: [] })
-        setCategoryBreakdown(Array.isArray(catJson) ? catJson : []);
         setError(null);
       } catch (err) {
         console.error("Dashboard load error:", err);
@@ -90,12 +83,19 @@ export default function StaffDashboard() {
       {/* Summary Cards */}
       <div className={styles.cards}>
         <Card label="Total Transactions" value={summary.totalTransactions} />
-        <Card label="Income This Month" value={`$${Number(summary.thisMonthIncome || 0).toLocaleString()}`} />
-        <Card label="Expense This Month" value={`$${Number(summary.thisMonthExpense || 0).toLocaleString()}`} />
+        <Card label="Income This Month" value={`${activeCurrency?.symbol}${Number(summary.thisMonthIncome || 0).toLocaleString()}`} />
+        <Card label="Expense This Month" value={`${activeCurrency?.symbol}${Number(summary.thisMonthExpense || 0).toLocaleString()}`} />
         <Card label="Active Users" value={summary.activeUsers} />
       </div>
 
-      {/* Analytics Section */}
+      {/* Financial Totals (All Users) */}
+      <div className={styles.cards}>
+        <Card label="Total Income" value={<span style={{ color: "green" }}>{activeCurrency?.symbol}{Number(summary.income || 0).toLocaleString()}</span>} />
+        <Card label="Total Expenses" value={<span style={{ color: "red" }}>{activeCurrency?.symbol}{Number(summary.expense || 0).toLocaleString()}</span>} />
+        <Card label="Net Balance" value={<span style={{ color: (summary.income - summary.expense) >= 0 ? "green" : "red" }}>{activeCurrency?.symbol}{Number((summary.income || 0) - (summary.expense || 0)).toLocaleString()}</span>} />
+      </div>
+
+      {/* Analytics + Recent Transactions side by side */}
       <div className={styles.analytics}>
         {/* BOX 1: Pie + Summary */}
         <div className={styles.chartBox}>
@@ -113,18 +113,18 @@ export default function StaffDashboard() {
 
                   <div className={styles.detailRow}>
                     <span className={styles.incomeDot}></span>
-                    <p>Income: <strong>${isNaN(income) ? 0 : income.toLocaleString()}</strong></p>
+                    <p>Income: <strong>{activeCurrency?.symbol}{isNaN(income) ? 0 : income.toLocaleString()}</strong></p>
                   </div>
 
                   <div className={styles.detailRow}>
                     <span className={styles.expenseDot}></span>
-                    <p>Expense: <strong>${isNaN(expense) ? 0 : expense.toLocaleString()}</strong></p>
+                    <p>Expense: <strong>{activeCurrency?.symbol}{isNaN(expense) ? 0 : expense.toLocaleString()}</strong></p>
                   </div>
 
                   <p>
                     Net Balance:{" "}
                     <strong style={{ color: (income - expense) >= 0 ? "green" : "red" }}>
-                      ${((isNaN(income) ? 0 : income) - (isNaN(expense) ? 0 : expense)).toLocaleString()}
+                      {activeCurrency?.symbol}{((isNaN(income) ? 0 : income) - (isNaN(expense) ? 0 : expense)).toLocaleString()}
                     </strong>
                   </p>
 
@@ -140,28 +140,7 @@ export default function StaffDashboard() {
           </div>
         </div>
 
-        {/* BOX 2: Category Breakdown */}
-        <div className={styles.chartBox}>
-          <h3>Category Breakdown (This Month)</h3>
-
-          {categoryBreakdown.length === 0 ? (
-            <p>No category data found for this month.</p>
-          ) : (
-            categoryBreakdown.map((c) => {
-              const amount = Number(c.amount) || 0;
-              return (
-                <div key={c.category} className={styles.catRow}>
-                  <span>{c.category}</span>
-                  <span>${isNaN(amount) ? 0 : amount.toLocaleString()}</span>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
-
-      {/* Tables */}
-      <div className={styles.tables}>
+        {/* BOX 2: Recent Transactions */}
         <div className={styles.tableBox}>
           <h3>Recent Transactions</h3>
 
@@ -183,37 +162,11 @@ export default function StaffDashboard() {
                     <span className={t.type === "income" ? styles.incomeType : styles.expenseType}>
                       {t.type}
                     </span>
-                    <span>${isNaN(amount) ? 0 : amount.toLocaleString()}</span>
+                    <span>{activeCurrency?.symbol}{isNaN(amount) ? 0 : amount.toLocaleString()}</span>
                     <span>{t.date ? new Date(t.date).toLocaleDateString() : "—"}</span>
                   </div>
                 );
               })}
-            </>
-          )}
-        </div>
-
-        <div className={styles.tableBox}>
-          <h3>Recent Logs</h3>
-
-          {recentLogs.length === 0 ? (
-            <p>No logs found.</p>
-          ) : (
-            <>
-              <div className={styles.tableHeader}>
-                <span>User</span>
-                <span>Action</span>
-                <span>Message</span>
-                <span>Time</span>
-              </div>
-              {recentLogs.map((log) => (
-                <div key={log.id} className={styles.row}>
-                  <span>{log.user?.username || `#${log.userId ?? "—"}`}</span>
-                  <span>{log.action}</span>
-                  <span className={styles.logMsg}>{log.message}</span>
-                  {/* logs use `timestamp`, not `date` */}
-                  <span>{log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : "—"}</span>
-                </div>
-              ))}
             </>
           )}
         </div>

@@ -1,8 +1,21 @@
-import { useState, useEffect } from "react";
-import { EXPENSE_CATEGORIES } from "./categories";
+import { useState, useEffect, useContext } from "react";
+import { createPortal } from "react-dom";
 import styles from "./AddExpenseModal.module.css";
+import { API_URL } from "../config";
+import { CurrencyContext } from "../context/CurrencyContext";
+
+const DEFAULT_EXPENSE_CATEGORIES = [
+    "Food",
+    "Groceries",
+    "Transport",
+    "Shopping",
+    "Bills",
+    "Entertainment",
+    "Others",
+];
 
 export default function AddExpenseModal({ open, onClose, onSubmit, editData }) {
+    const { activeCurrency } = useContext(CurrencyContext);
     const [showChargesModal, setShowChargesModal] = useState(false);
     const [showRecurringModal, setShowRecurringModal] = useState(false);
     const user = JSON.parse(localStorage.getItem("user"));
@@ -22,10 +35,37 @@ export default function AddExpenseModal({ open, onClose, onSubmit, editData }) {
         // ⭐ Recurring
         isRecurring: false,
         recurringType: "",
-        recurringEndDate: ""
+        recurringEndDate: "",
+        nextDueDate: ""
     });
 
     const [errors, setErrors] = useState({}); // ⭐ validation errors
+    const [categoryOptions, setCategoryOptions] = useState(DEFAULT_EXPENSE_CATEGORIES);
+
+    useEffect(() => {
+        if (!open) return;
+
+        async function loadCategories() {
+            try {
+                const res = await fetch(`${API_URL}/transactions/categories?type=expense`);
+                const data = await res.json();
+
+                if (Array.isArray(data) && data.length > 0) {
+                    const names = data
+                        .map((item) => item?.name)
+                        .filter(Boolean);
+
+                    setCategoryOptions(names.length > 0 ? names : DEFAULT_EXPENSE_CATEGORIES);
+                } else {
+                    setCategoryOptions(DEFAULT_EXPENSE_CATEGORIES);
+                }
+            } catch {
+                setCategoryOptions(DEFAULT_EXPENSE_CATEGORIES);
+            }
+        }
+
+        loadCategories();
+    }, [open]);
 
     useEffect(() => {
         if (editData) {
@@ -46,7 +86,8 @@ export default function AddExpenseModal({ open, onClose, onSubmit, editData }) {
 
                 isRecurring: editData.isRecurring || false,
                 recurringType: editData.recurringType || "",
-                recurringEndDate: editData.recurringEndDate || ""
+                recurringEndDate: editData.recurringEndDate || "",
+                nextDueDate: editData.nextDueDate || ""
             });
         } else {
             setForm({
@@ -62,6 +103,7 @@ export default function AddExpenseModal({ open, onClose, onSubmit, editData }) {
                 isRecurring: false,
                 recurringType: "",
                 recurringEndDate: "",
+                nextDueDate: "",
                 userId: user?.id || null
             });
         }
@@ -84,6 +126,7 @@ export default function AddExpenseModal({ open, onClose, onSubmit, editData }) {
                 isRecurring: false,
                 recurringType: "",
                 recurringEndDate: "",
+                nextDueDate: "",
                 userId: user?.id || null
             });
             setErrors({});
@@ -158,11 +201,10 @@ export default function AddExpenseModal({ open, onClose, onSubmit, editData }) {
         onClose();
     }
 
-    return (
+    return createPortal(
         <>
-            <div className="page-transition">
-                <div className={styles.expensemodalOverlay} onClick={onClose}>
-                    <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.expensemodalOverlay} onClick={onClose}>
+                <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
 
                         <h2>{editData ? "Edit Expense" : "Add Expense"}</h2>
 
@@ -188,7 +230,7 @@ export default function AddExpenseModal({ open, onClose, onSubmit, editData }) {
                             >
                                 <option value="">Select category</option>
 
-                                {EXPENSE_CATEGORIES.map((cat) => (
+                                {categoryOptions.map((cat) => (
                                     <option key={cat} value={cat}>
                                         {cat}
                                     </option>
@@ -211,7 +253,7 @@ export default function AddExpenseModal({ open, onClose, onSubmit, editData }) {
 
                         {/* AMOUNT */}
                         <div className={styles.modalSection}>
-                            <label>Amount</label>
+                            <label>Amount ({activeCurrency?.symbol})</label>
                             <input
                                 type="number"
                                 name="amount"
@@ -263,9 +305,7 @@ export default function AddExpenseModal({ open, onClose, onSubmit, editData }) {
                             </button>
                         </div>
 
-                    </div>
                 </div>
-
             </div>
 
             {showChargesModal && (
@@ -289,7 +329,7 @@ export default function AddExpenseModal({ open, onClose, onSubmit, editData }) {
                         </div>
 
                         <div className={styles.modalSection}>
-                            <label>Other Charge</label>
+                            <label>Other Charges</label>
                             <input type="number" name="otherCharge" value={form.otherCharge} onChange={handleChange} />
                         </div>
 
@@ -331,6 +371,22 @@ export default function AddExpenseModal({ open, onClose, onSubmit, editData }) {
                         </div>
 
                         <div className={styles.modalSection}>
+                            <label>Next Due Date</label>
+                            <input
+                                type="date"
+                                name="nextDueDate"
+                                value={form.nextDueDate}
+                                onChange={(e) => {
+                                    setForm({
+                                        ...form,
+                                        nextDueDate: e.target.value,
+                                        isRecurring: true
+                                    });
+                                }}
+                            />
+                        </div>
+
+                        <div className={styles.modalSection}>
                             <label>End Date (optional)</label>
                             <input
                                 type="date"
@@ -354,7 +410,7 @@ export default function AddExpenseModal({ open, onClose, onSubmit, editData }) {
                     </div>
                 </div>
             )}
-        </>
-
+        </>,
+        document.body
     );
 }

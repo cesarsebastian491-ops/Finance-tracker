@@ -1,10 +1,11 @@
-import { Controller, Post, Body, UnauthorizedException, Req, Get } from '@nestjs/common';
+import { Controller, Post, Body, Req, Get, UseGuards, BadRequestException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 import * as speakeasy from "speakeasy";
 import { SessionsService } from '../sessions/sessions.service';
-import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from './jwt-auth.guard'; // adjust path if needed
+import { CaptchaGuard } from './captcha.guard';
+import { CaptchaService } from './captcha.service';
 
 @Controller('auth')
 export class AuthController {
@@ -12,10 +13,16 @@ export class AuthController {
     private readonly usersService: UsersService,
     private readonly authService: AuthService,
     private readonly sessionsService: SessionsService,
-
+    private readonly captchaService: CaptchaService,
   ) { }
 
+  @Get('captcha')
+  getCaptcha() {
+    return this.captchaService.generate();
+  }
+
   @Post('register')
+  @UseGuards(CaptchaGuard)
   async register(
     @Body('username') username: string,
     @Body('email') email: string,
@@ -24,19 +31,26 @@ export class AuthController {
     @Body('lastName') lastName: string,
     @Body('phone') phone: string,
   ) {
-    const user = await this.usersService.register(
-      username,
-      email,
-      password,
-      firstName,
-      lastName,
-      phone,
-    );
+    try {
+      const user = await this.usersService.register(
+        username,
+        email,
+        password,
+        firstName,
+        lastName,
+        phone,
+      );
 
-    return {
-      success: true,
-      user,
-    };
+      return {
+        success: true,
+        user,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Registration failed',
+      };
+    }
   }
   @Post('2fa/disable')
   async disable2FA(@Body('userId') userId: number) {
@@ -45,13 +59,16 @@ export class AuthController {
   }
 
   @Post('login')
+  @UseGuards(CaptchaGuard)
   async login(@Req() req, @Body() body: any) {
     console.log('LOGIN BODY:', body);
 
-    const user = await this.authService.validateUser(body.email, body.password);
-    console.log('VALIDATED USER:', user);
+    const rawUser = await this.authService.validateUser(body.email, body.password);
 
-    if (!user) return { success: false, message: 'Invalid credentials' };
+    if (!rawUser) return { success: false, message: 'Invalid email or password' };
+    if ((rawUser as any).disabled) return { success: false, message: 'Account is disabled. Contact an administrator.' };
+
+    const user = rawUser as any;
 
     // ⭐ CREATE SESSION HERE
     const session = await this.sessionsService.createSession(
@@ -81,16 +98,21 @@ export class AuthController {
   }
 
   @Post('2fa/generate')
-
   async generate2FA(@Body('userId') userId: number) {
-    const result = await this.usersService.generateTwoFactorSecret(userId);
+    try {
+      if (!userId) {
+        throw new BadRequestException('User ID is required');
+      }
 
-    return {
-      success: true,
-      ...result,
-    };
+      const result = await this.usersService.generateTwoFactorSecret(userId);
 
-
+      return {
+        success: true,
+        ...result,
+      };
+    } catch (err: any) {
+      throw new BadRequestException(err.message || 'Failed to generate 2FA');
+    }
   }
 
   @Post("2fa/verify")

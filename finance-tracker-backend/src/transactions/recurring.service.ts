@@ -34,22 +34,35 @@ export class RecurringService {
       // Should we generate today?
       if (!this.shouldGenerateToday(item)) continue;
 
+      // Calculate next due date based on recurring type
+      const nextDue = this.calculateNextDueDate(item);
+
       // Create new transaction
       const newTx = this.repo.create({
         ...item,
         id: undefined, // new record
         date: today,
         lastGenerated: today,
+        nextDueDate: nextDue,
       });
 
       await this.repo.save(newTx);
 
-      // Update lastGenerated on original recurring template
-      await this.repo.update(item.id, { lastGenerated: today });
+      // Update lastGenerated and nextDueDate on original recurring template
+      await this.repo.update(item.id, { 
+        lastGenerated: today,
+        nextDueDate: nextDue,
+      });
     }
   }
 
   shouldGenerateToday(item: Transaction) {
+    // If nextDueDate is set, use it to determine if we should generate today
+    if (item.nextDueDate) {
+      return dayjs().isSame(item.nextDueDate, 'day') || dayjs().isAfter(item.nextDueDate);
+    }
+
+    // Otherwise use the old logic based on lastGenerated
     const last = item.lastGenerated || item.date;
     const today = dayjs();
 
@@ -68,6 +81,28 @@ export class RecurringService {
 
       default:
         return false;
+    }
+  }
+
+  calculateNextDueDate(item: Transaction): string {
+    const base = item.nextDueDate || item.lastGenerated || item.date;
+    const next = dayjs(base);
+
+    switch (item.recurringType) {
+      case 'daily':
+        return next.add(1, 'day').format('YYYY-MM-DD');
+
+      case 'weekly':
+        return next.add(1, 'week').format('YYYY-MM-DD');
+
+      case 'monthly':
+        return next.add(1, 'month').format('YYYY-MM-DD');
+
+      case 'yearly':
+        return next.add(1, 'year').format('YYYY-MM-DD');
+
+      default:
+        return next.format('YYYY-MM-DD');
     }
   }
 }

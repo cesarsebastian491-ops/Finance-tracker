@@ -104,7 +104,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<StaffDashboard />} />
+          <Route index element={<StaffTransactionPage />} />
           <Route path="transactions/*" element={<StaffTransactionPage />} />
           <Route path="users/*" element={<StaffUsers />} />
           <Route path="logs/*" element={<StaffLogs />} />

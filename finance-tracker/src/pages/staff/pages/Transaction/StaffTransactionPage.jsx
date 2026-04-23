@@ -2,6 +2,8 @@ import { NavLink, Routes, Route } from "react-router-dom";
 import AllTransactions from "./Pages/AllTransactions";
 import IncomeTransactions from "./Pages/IncomeTransactions";
 import ExpenseTransactions from "./Pages/ExpenseTransactions";
+import OverviewTransactions from "./Pages/OverviewTransactions";
+import RunningBalanceTransactions from "./Pages/RunningBalanceTransactions";
 import CategoryBreakdown from "./Pages/CategoryBreakdown";
 import TransactionDashboard from "./Pages/TransactionDashboard";
 import styles from "./staffTransactionPage.module.css";
@@ -29,7 +31,8 @@ export default function StaffTransactionPage() {
                         >
                             All
                         </NavLink>
-                         <NavLink
+
+                        <NavLink
                             to="/staff/transactions/income"
                             className={({ isActive }) => isActive ? styles.active : ""}
                         >
@@ -40,6 +43,20 @@ export default function StaffTransactionPage() {
                             className={({ isActive }) => isActive ? styles.active : ""}
                         >
                             Expense
+                        </NavLink>
+
+                        <NavLink
+                            to="/staff/transactions/overview"
+                            className={({ isActive }) => isActive ? styles.active : ""}
+                        >
+                            Overview
+                        </NavLink>
+
+                        <NavLink
+                            to="/staff/transactions/running-balance"
+                            className={({ isActive }) => isActive ? styles.active : ""}
+                        >
+                            Running Balance
                         </NavLink>
                         
                         {/* <NavLink to="/staff/transactions/categories">Categories</NavLink> */}
@@ -52,6 +69,8 @@ export default function StaffTransactionPage() {
                         <Route path="all" element={<AllTransactions />} />
                         <Route path="income" element={<IncomeTransactions />} />
                         <Route path="expense" element={<ExpenseTransactions />} />
+                        <Route path="overview" element={<OverviewTransactions />} />
+                        <Route path="running-balance" element={<RunningBalanceTransactions />} />
                         {/* <Route path="categories" element={<CategoryBreakdown />} /> */}
                     </Routes>
                 </div>

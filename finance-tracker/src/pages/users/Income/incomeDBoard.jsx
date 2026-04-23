@@ -2,19 +2,23 @@
 import { useState, useEffect, useContext, useRef } from "react";
 import DateFilterMenu from "../../../components/DateFilterMenu";
 import AddIncomeModal from "../../../components/AddIncomeModal";
+import TransactionInfoModal from "../../../components/TransactionInfoModal";
 import { CurrencyContext } from "../../../context/CurrencyContext";
 import styles from "./incomeDBoard.module.css";
 import { API_URL } from "../../../config";
 
-export default function IncomeDBoard() {
+export default function IncomeDBoard({ role } = {}) {
 
+    const isStaff = role === "staff";
     const [openAddModal, setOpenAddModal] = useState(false);
     const [transactions, setTransactions] = useState([]);
     const [editData, setEditData] = useState(null);
-    const { mainCurrency } = useContext(CurrencyContext);
+    const { activeCurrency } = useContext(CurrencyContext);
     const [selectedIncome, setSelectedIncome] = useState(null);
-    const [sortOrder, setSortOrder] = useState("desc");
+    const [sortOrder, setSortOrder] = useState("asc");
     const tableRef = useRef();
+
+    const getIncomeTitle = (inc) => inc?.source || "Untitled";
 
   
 
@@ -28,7 +32,13 @@ export default function IncomeDBoard() {
         try {
             if (!userId) return;
 
-            const res = await fetch(`${API_URL}/transactions/user/${userId}`);
+            const url = isStaff
+                ? `${API_URL}/analytics/staff/transactions`
+                : `${API_URL}/transactions/user/${userId}`;
+
+            const res = await fetch(url, {
+                headers: isStaff ? { Authorization: `Bearer ${storedUser.access_token}` } : {},
+            });
             const data = await res.json();
 
             setTransactions(data);
@@ -73,7 +83,7 @@ export default function IncomeDBoard() {
     }
     // ⭐ Delete Income
     async function handleDelete(income) {
-        if (!confirm(`Delete ${income.source}?`)) return;
+        if (!confirm(`Delete ${getIncomeTitle(income)}?`)) return;
 
         try {
             await fetch(
@@ -81,6 +91,7 @@ export default function IncomeDBoard() {
                 { method: "DELETE" }
             );
 
+            setSelectedIncome(null); // Close the modal after delete
             await loadData();
         } catch (err) {
             console.error("Error deleting income:", err);
@@ -99,10 +110,24 @@ export default function IncomeDBoard() {
     function formatMoney(amount) {
         return new Intl.NumberFormat(undefined, {
             style: "currency",
-            currency: mainCurrency,
+            currency: activeCurrency?.code || 'PHP',
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         }).format(Number(amount) || 0);
+    }
+
+    function calculateIncomeAdditionalCharges(inc) {
+        const tax = Number(inc.tax) || 0;
+        const serviceFee = Number(inc.serviceFee) || 0;
+        const otherCharge = Number(inc.otherCharge) || 0;
+        const discount = Number(inc.discount) || 0;
+        return tax + serviceFee + otherCharge - discount;
+    }
+
+    function formatAdditionalCharges(value) {
+        if (value === 0) return "None";
+        if (value < 0) return `Less ${formatMoney(Math.abs(value))}`;
+        return formatMoney(value);
     }
 
     function getCurrentMonthTransactions(transactions) {
@@ -184,7 +209,10 @@ export default function IncomeDBoard() {
             inc.source?.toLowerCase().includes(term) ||
             inc.category?.toLowerCase().includes(term) ||
             formatDate(inc.date).toLowerCase().includes(term) ||
-            formatMoney(inc.amount).toLowerCase().includes(term)
+            formatMoney(inc.amount).toLowerCase().includes(term) ||
+            formatMoney(calculateIncomeAdditionalCharges(inc)).toLowerCase().includes(term) ||
+            formatAdditionalCharges(calculateIncomeAdditionalCharges(inc)).toLowerCase().includes(term) ||
+            (isStaff && inc.user?.username?.toLowerCase().includes(term))
         );
     });
 
@@ -240,7 +268,7 @@ export default function IncomeDBoard() {
 
         transactions.forEach(tx => {
             if (tx.type === "income") {
-                const src = tx.source || "Uncategorized";
+                const src = getIncomeTitle(tx);
                 sourceTotals[src] = (sourceTotals[src] || 0) + Number(tx.amount);
             }
         });
@@ -272,15 +300,17 @@ export default function IncomeDBoard() {
 
         const headers = [
             "Date",
-            "Source",
+            "Income Title",
             "Income Amount",
+            "Additional Charges",
             "Recurring"
         ];
 
         const values = rows.map(inc => [
             formatDate(inc.date),
-            inc.source || "—",
+            getIncomeTitle(inc),
             formatMoney(inc.amount),
+            formatAdditionalCharges(calculateIncomeAdditionalCharges(inc)),
             inc.isRecurring ? "Yes" : ""
         ]);
 
@@ -367,8 +397,10 @@ export default function IncomeDBoard() {
                                     <table className={styles.txTable}>
                                     <thead>
                                         <tr>
-                                            <th>Source</th>
+                                            {isStaff && <th>Username</th>}
+                                            <th>Income Title</th>
                                             <th>Date</th>
+                                            <th>Additional Charges</th>
                                             <th>Amount</th>
                                             <th>Recurring</th>
                                         </tr>
@@ -377,7 +409,7 @@ export default function IncomeDBoard() {
                                     <tbody>
                                         {finalIncomeList.length === 0 ? (
                                             <tr>
-                                                <td colSpan="6" style={{ textAlign: "center", padding: "20px" }}>
+                                                <td colSpan={isStaff ? 6 : 5} style={{ textAlign: "center", padding: "20px" }}>
                                                     No income to display
                                                 </td>
                                             </tr>
@@ -388,9 +420,11 @@ export default function IncomeDBoard() {
                                                     className={styles.incomeRow}
                                                     onClick={() => setSelectedIncome(inc)}
                                                 >
-                                                    <td>{inc.source}</td>
+                                                    {isStaff && <td>{inc.user?.username || '—'}</td>}
+                                                    <td>{getIncomeTitle(inc)}</td>
                                                     <td>{formatDate(inc.date)}</td>
-                                                    <td className={styles.incomeAmount}>{formatMoney(inc.amount)}</td>
+                                                    <td className={styles.incomeAmount}>{formatAdditionalCharges(calculateIncomeAdditionalCharges(inc))}</td>
+                                                    <td className={styles.incomeAmount}>{formatMoney((Number(inc.amount) || 0) + calculateIncomeAdditionalCharges(inc))}</td>
                                                     <td className={inc.isRecurring ? styles.recurringYes : styles.recurringNo}>
                                                         {inc.isRecurring ? "Yes" : ""}
                                                     </td>
@@ -411,167 +445,52 @@ export default function IncomeDBoard() {
                                 <h4>Total Revenue ({getFilterLabel()})</h4>
                                 <p>{formatMoney(totalIncome)}</p>
 
-                                <h4>Highest Revenue Source ({getFilterLabel()})</h4>
+                                <h4>Highest Revenue Title ({getFilterLabel()})</h4>
                                 <p>{highestSource}</p>
 
                                 <h4>Monthly Average ({getFilterLabel()})</h4>
                                 <p>{formatMoney(averageIncome)}</p>
                             </div>
 
-                            <div className={styles.summaryActions}>
-                                <button className={styles.addbtn} onClick={() => setOpenAddModal(true)}>
-                                    Add Revenue
-                                </button>
-                            </div>
+                            {!isStaff && (
+                                <div className={styles.summaryActions}>
+                                    <button className={styles.addbtn} onClick={() => setOpenAddModal(true)}>
+                                        Add Revenue
+                                    </button>
+                                </div>
+                            )}
                         </aside>
 
                     </div>
 
                     {/* MODALS */}
-                    <AddIncomeModal
-                        open={openAddModal}
-                        onClose={() => {
-                            setOpenAddModal(false);
-                            setEditData(null);
-                        }}
-                        onSubmit={handleAddIncome}
-                        editData={editData}
-                    />
+                    {!isStaff && (
+                        <AddIncomeModal
+                            open={openAddModal}
+                            onClose={() => {
+                                setOpenAddModal(false);
+                                setEditData(null);
+                            }}
+                            onSubmit={handleAddIncome}
+                            editData={editData}
+                        />
+                    )}
                 </div>
             </main>
 
             {selectedIncome && (
-                <IncomeViewModal
-                    income={selectedIncome}
+                <TransactionInfoModal
+                    transaction={selectedIncome}
                     onClose={() => setSelectedIncome(null)}
-                    onEdit={(inc) => {
+                    onEdit={!isStaff ? (inc) => {
                         setEditData(inc);
                         setOpenAddModal(true);
-                    }}
-                    onDelete={handleDelete}
+                    } : undefined}
+                    onDelete={!isStaff ? handleDelete : undefined}
+                    formatMoney={formatMoney}
+                    formatDate={formatDate}
                 />
             )}
         </>
     );
-
-    function IncomeViewModal({ income, onClose, onEdit, onDelete }) {
-        if (!income) return null;
-
-        return (
-            <div className={styles.infoOverlay} onClick={onClose}>
-                <div className={styles.infoModal} onClick={(e) => e.stopPropagation()}>
-                    <h2 className={styles.infoTitle}>{income.source}</h2>
-
-                    <div className={styles.infoContent}>
-
-                        <div className={styles.twoColRow}>
-                            <div className={styles.colItem}>
-                                <span className={styles.label}>Date</span>
-                                <span className={styles.value}>{formatDate(income.date)}</span>
-                            </div>
-                        </div>
-
-                        {/* AMOUNT */}
-                        <div className={styles.infoRow}>
-                            <span className={styles.label}>Amount</span>
-                            <span className={styles.amountValue}>{formatMoney(income.amount)}</span>
-                        </div>
-
-                        {/* DESCRIPTION */}
-                        <div className={styles.infoRow}>
-                            <span className={styles.label}>Description</span>
-                            <span className={styles.value}>{income.description || "No description"}</span>
-                        </div>
-
-                        {/* -------------------------------------- */}
-                        {/* ADDITIONAL CHARGES SECTION */}
-                        {/* -------------------------------------- */}
-
-                        <div className={styles.twoColumnSection}>
-
-                            {/* LEFT COLUMN — Additional Charges */}
-                            <div className={styles.column}>
-                                <h5 className={styles.sectionTitle}>Additional Charges</h5>
-
-                                {(income.tax > 0 ||
-                                    income.serviceFee > 0 ||
-                                    income.discount > 0 ||
-                                    income.otherCharge > 0) ? (
-                                    <>
-                                        {income.tax > 0 && (
-                                            <div className={styles.infoRow}>
-                                                <h6 className={styles.label}>Tax</h6>
-                                                <h7 className={styles.value}>{formatMoney(income.tax)}</h7>
-                                            </div>
-                                        )}
-
-                                        {income.serviceFee > 0 && (
-                                            <div className={styles.infoRow}>
-                                                <h5 className={styles.label}>Service Fee</h5>
-                                                <span className={styles.value}>{formatMoney(income.serviceFee)}</span>
-                                            </div>
-                                        )}
-
-                                        {income.discount > 0 && (
-                                            <div className={styles.infoRow}>
-                                                <span className={styles.label}>Discount</span>
-                                                <span className={styles.value}>-{formatMoney(income.discount)}</span>
-                                            </div>
-                                        )}
-
-                                        {income.otherCharge > 0 && (
-                                            <div className={styles.infoRow}>
-                                                <span className={styles.label}>Other Charge</span>
-                                                <span className={styles.value}>{formatMoney(income.otherCharge)}</span>
-                                            </div>
-                                        )}
-                                    </>
-                                ) : (
-                                    <div className={styles.infoRow}>
-                                        <span className={styles.value}>None</span>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* RIGHT COLUMN — Recurring */}
-                            <div className={styles.column}>
-                                <h5 className={styles.sectionTitle}>Recurring</h5>
-
-                                {income.isRecurring ? (
-                                    <>
-                                        <div className={styles.infoRow}>
-                                            <span className={styles.label}>Frequency</span>
-                                            <span className={styles.value}>{income.recurringType}</span>
-                                        </div>
-
-                                        {income.recurringEndDate && (
-                                            <div className={styles.infoRow}>
-                                                <span className={styles.label}>Ends On</span>
-                                                <span className={styles.value}>{formatDate(income.recurringEndDate)}</span>
-                                            </div>
-                                        )}
-                                    </>
-                                ) : (
-                                    <div className={styles.infoRow}>
-                                        <span className={styles.value}>None</span>
-                                    </div>
-                                )}
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <div className={styles.infoActions}>
-                        <div className={styles.actionRow}>
-                            <button className={styles.editBtn} onClick={() => { onClose(); onEdit(income); }}>Edit</button>
-                            <button className={styles.deleteBtn} onClick={() => onDelete(income.id)}>Delete</button>
-                        </div>
-
-                        <button className={styles.closeBtn} onClick={onClose}>Close</button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 }

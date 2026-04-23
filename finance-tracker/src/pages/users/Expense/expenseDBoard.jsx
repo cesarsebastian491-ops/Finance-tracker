@@ -1,22 +1,24 @@
 import { useState, useEffect, useContext, useRef } from "react";
 import DateFilterMenu from "../../../components/DateFilterMenu";
 import AddExpenseModal from "../../../components/AddExpenseModal";
+import TransactionInfoModal from "../../../components/TransactionInfoModal";
 import { CurrencyContext } from "../../../context/CurrencyContext";
 import styles from "./expenseDBoard.module.css";
 import { API_URL } from "../../../config";
 
 
 
-export default function expenseDBoard() {
+export default function expenseDBoard({ role } = {}) {
 
+    const isStaff = role === "staff";
     const [openAddModal, setOpenAddModal] = useState(false);
     const [transactions, setTransactions] = useState([]);
     const [editData, setEditData] = useState(null);
-    const { mainCurrency } = useContext(CurrencyContext);
+    const { activeCurrency } = useContext(CurrencyContext);
     const [selectedExpense, setSelectedExpense] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
     const tableRef = useRef(null);
-    const [sortOrder, setSortOrder] = useState("desc"); // "desc" = latest first
+    const [sortOrder, setSortOrder] = useState("asc"); // "asc" = oldest first
 
 
     const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -79,7 +81,13 @@ export default function expenseDBoard() {
             const storedUser = JSON.parse(localStorage.getItem("user"));
             if (!storedUser) return;
 
-            const res = await fetch(`${API_URL}/transactions/user/${storedUser.id}`);
+            const url = isStaff
+                ? `${API_URL}/analytics/staff/transactions`
+                : `${API_URL}/transactions/user/${storedUser.id}`;
+
+            const res = await fetch(url, {
+                headers: isStaff ? { Authorization: `Bearer ${storedUser.access_token}` } : {},
+            });
             const data = await res.json();
 
             setTransactions(data);
@@ -97,10 +105,24 @@ export default function expenseDBoard() {
     function formatMoney(amount) {
         return new Intl.NumberFormat(undefined, {
             style: "currency",
-            currency: mainCurrency,
+            currency: activeCurrency?.code || 'PHP',
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         }).format(Number(amount) || 0);
+    }
+
+    function calculateExpenseAdditionalCharges(exp) {
+        const tax = Number(exp.tax) || 0;
+        const serviceFee = Number(exp.serviceFee) || 0;
+        const otherCharge = Number(exp.otherCharge) || 0;
+        const discount = Number(exp.discount) || 0;
+        return tax + serviceFee + otherCharge - discount;
+    }
+
+    function formatAdditionalCharges(value) {
+        if (value === 0) return "None";
+        if (value < 0) return `Less ${formatMoney(Math.abs(value))}`;
+        return formatMoney(value);
     }
 
     function formatDate(dateString) {
@@ -165,7 +187,10 @@ export default function expenseDBoard() {
         return (
             exp.category?.toLowerCase().includes(term) ||
             formatDate(exp.date).toLowerCase().includes(term) ||
-            formatMoney(exp.amount).toLowerCase().includes(term)
+            formatMoney(exp.amount).toLowerCase().includes(term) ||
+            formatMoney(calculateExpenseAdditionalCharges(exp)).toLowerCase().includes(term) ||
+            formatAdditionalCharges(calculateExpenseAdditionalCharges(exp)).toLowerCase().includes(term) ||
+            (isStaff && exp.user?.username?.toLowerCase().includes(term))
         );
 
 
@@ -257,6 +282,7 @@ export default function expenseDBoard() {
             "Date",
             "Category",
             "Expense Amount",
+            "Additional Charges",
             "Recurring"
         ];
 
@@ -264,6 +290,7 @@ export default function expenseDBoard() {
             formatDate(exp.date),
             exp.category || "—",
             formatMoney(exp.amount),
+            formatAdditionalCharges(calculateExpenseAdditionalCharges(exp)),
             exp.isRecurring ? "Yes" : ""
         ]);
 
@@ -355,9 +382,11 @@ export default function expenseDBoard() {
                                     <table className={styles.txTable}>
                                     <thead>
                                         <tr>
+                                            {isStaff && <th>Username</th>}
                                             <th>Expense</th>
                                             <th>Category</th>
                                             <th>Date</th>
+                                            <th>Additional Charges</th>
                                             <th>Amount</th>
                                             <th>Recurring</th>
                                         </tr>
@@ -366,7 +395,7 @@ export default function expenseDBoard() {
                                     <tbody>
                                         {finalExpenseList.length === 0 ? (
                                             <tr>
-                                                <td colSpan="6" style={{ textAlign: "center", padding: "20px" }}>
+                                                <td colSpan={isStaff ? 7 : 6} style={{ textAlign: "center", padding: "20px" }}>
                                                     No expenses to display
                                                 </td>
                                             </tr>
@@ -377,10 +406,12 @@ export default function expenseDBoard() {
                                                     className={styles.expenseRow}
                                                     onClick={() => setSelectedExpense(exp)}
                                                 >
+                                                    {isStaff && <td>{exp.user?.username || '—'}</td>}
                                                     <td>{exp.expense}</td>
                                                     <td>{exp.category}</td>
                                                     <td>{formatDate(exp.date)}</td>
-                                                    <td className={styles.expenseAmount}>{formatMoney(exp.amount)}</td>
+                                                    <td className={styles.expenseAmount}>{formatAdditionalCharges(calculateExpenseAdditionalCharges(exp))}</td>
+                                                    <td className={styles.expenseAmount}>{formatMoney((Number(exp.amount) || 0) + calculateExpenseAdditionalCharges(exp))}</td>
                                                     <td className={exp.isRecurring ? styles.recurringYes : styles.recurringNo}>
                                                         {exp.isRecurring ? "Yes" : ""}
                                                     </td>
@@ -409,9 +440,14 @@ export default function expenseDBoard() {
                             </div>
 
                             <div className={styles.summaryActions}>
-                                <button className={styles.addbtn} onClick={() => setOpenAddModal(true)}>
-                                    Add Expense
-                                </button>
+                                {!isStaff && (
+                                    <button className={styles.addbtn} onClick={() => {
+                                        setEditData(null);
+                                        setOpenAddModal(true);
+                                    }}>
+                                        Add Expense
+                                    </button>
+                                )}
                             </div>
                         </aside>
 
@@ -419,158 +455,38 @@ export default function expenseDBoard() {
 
                     </div>
 
-
                 </div>
 
 
 
                 {selectedExpense && (
-                    <ExpenseViewModal
-                        expense={selectedExpense}
+                    <TransactionInfoModal
+                        transaction={selectedExpense}
                         onClose={() => setSelectedExpense(null)}
-                        onEdit={(exp) => {
+                        onEdit={!isStaff ? (exp) => {
                             setEditData(exp);
                             setOpenAddModal(true);
-                        }}
-                        onDelete={handleDelete}
+                        } : undefined}
+                        onDelete={!isStaff ? handleDelete : undefined}
+                        formatMoney={formatMoney}
+                        formatDate={formatDate}
                     />
                 )}
 
             </main>
-            <AddExpenseModal
-                open={openAddModal}
-                onClose={() => setOpenAddModal(false)}
-                onSubmit={handleAddExpense}
-                editData={editData}
-            />
+            {!isStaff && (
+                <AddExpenseModal
+                    open={openAddModal}
+                    onClose={() => {
+                        setOpenAddModal(false);
+                        setEditData(null);
+                    }}
+                    onSubmit={handleAddExpense}
+                    editData={editData}
+                />
+            )}
 
         </>
     );
 
-    function ExpenseViewModal({ expense, onClose, onEdit, onDelete }) {
-        if (!expense) return null;
-
-        return (
-            <div className={styles.infoOverlay} onClick={onClose}>
-                <div className={styles.infoModal} onClick={(e) => e.stopPropagation()}>
-                    <h2 className={styles.infoTitle}>{expense.expense}</h2>
-
-                    <div className={styles.infoContent}>
-
-                        <div className={styles.twoColRow}>
-                            <div className={styles.colItem}>
-                                <span className={styles.label}>Category</span>
-                                <span className={styles.value}>{expense.category || "—"}</span>
-                            </div>
-
-                            <div className={styles.colItem}>
-                                <span className={styles.label}>Date</span>
-                                <span className={styles.value}>{formatDate(expense.date)}</span>
-                            </div>
-                        </div>
-
-                        {/* AMOUNT */}
-                        <div className={styles.infoRow}>
-                            <span className={styles.label}>Amount</span>
-                            <span className={styles.amountValue}>{formatMoney(expense.amount)}</span>
-                        </div>
-
-                        {/* DESCRIPTION */}
-                        <div className={styles.infoRow}>
-                            <span className={styles.label}>Description</span>
-                            <span className={styles.value}>{expense.description || "No description"}</span>
-                        </div>
-
-                        {/* -------------------------------------- */}
-                        {/* ADDITIONAL CHARGES SECTION */}
-                        {/* -------------------------------------- */}
-
-                        <div className={styles.twoColumnSection}>
-
-                            {/* LEFT COLUMN — Additional Charges */}
-                            <div className={styles.column}>
-                                <h5 className={styles.sectionTitle}>Additional Charges</h5>
-
-                                {(expense.tax > 0 ||
-                                    expense.serviceFee > 0 ||
-                                    expense.discount > 0 ||
-                                    expense.otherCharge > 0) ? (
-                                    <>
-                                        {expense.tax > 0 && (
-                                            <div className={styles.infoRow}>
-                                                <h6 className={styles.label}>Tax</h6>
-                                                <h7 className={styles.value}>{formatMoney(expense.tax)}</h7>
-                                            </div>
-                                        )}
-
-                                        {expense.serviceFee > 0 && (
-                                            <div className={styles.infoRow}>
-                                                <h5 className={styles.label}>Service Fee</h5>
-                                                <span className={styles.value}>{formatMoney(expense.serviceFee)}</span>
-                                            </div>
-                                        )}
-
-                                        {expense.discount > 0 && (
-                                            <div className={styles.infoRow}>
-                                                <span className={styles.label}>Discount</span>
-                                                <span className={styles.value}>-{formatMoney(expense.discount)}</span>
-                                            </div>
-                                        )}
-
-                                        {expense.otherCharge > 0 && (
-                                            <div className={styles.infoRow}>
-                                                <span className={styles.label}>Other Charge</span>
-                                                <span className={styles.value}>{formatMoney(expense.otherCharge)}</span>
-                                            </div>
-                                        )}
-                                    </>
-                                ) : (
-                                    <div className={styles.infoRow}>
-                                        <span className={styles.value}>None</span>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* RIGHT COLUMN — Recurring */}
-                            <div className={styles.column}>
-                                <h5 className={styles.sectionTitle}>Recurring</h5>
-
-                                {expense.isRecurring ? (
-                                    <>
-                                        <div className={styles.infoRow}>
-                                            <span className={styles.label}>Frequency</span>
-                                            <span className={styles.value}>{expense.recurringType}</span>
-                                        </div>
-
-                                        {expense.recurringEndDate && (
-                                            <div className={styles.infoRow}>
-                                                <span className={styles.label}>Ends On</span>
-                                                <span className={styles.value}>{formatDate(expense.recurringEndDate)}</span>
-                                            </div>
-                                        )}
-                                    </>
-                                ) : (
-                                    <div className={styles.infoRow}>
-                                        <span className={styles.value}>None</span>
-                                    </div>
-                                )}
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    {/* ACTION BUTTONS */}
-                    <div className={styles.infoActions}>
-                        <div className={styles.actionRow}>
-                            <button className={styles.editBtn} onClick={() => { onClose(); onEdit(expense); }}>Edit</button>
-                            <button className={styles.deleteBtn} onClick={() => onDelete(expense)}>Delete</button>
-                        </div>
-
-                        <button className={styles.closeBtn} onClick={onClose}>Close</button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 }

@@ -13,14 +13,6 @@ export default function StaffSidebar() {
                     end
                     className={({ isActive }) => (isActive ? styles.active : "")}
                 >
-                    <i className="ri-dashboard-line"></i>
-                    Dashboard
-                </NavLink>
-
-                <NavLink
-                    to="/staff/transactions"
-                    className={({ isActive }) => (isActive ? styles.active : "")}
-                >
                     <i className="ri-exchange-dollar-line"></i>
                     Transactions
                 </NavLink>

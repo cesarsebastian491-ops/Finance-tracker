@@ -11,6 +11,7 @@ import { SessionsModule } from './sessions/sessions.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { SystemModule } from './system/system.module';
+import { CurrenciesModule } from './currencies/currencies.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { LastActiveInterceptor } from './auth/last-active.interceptor';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -39,6 +40,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     MaintenanceModule,
     AnalyticsModule,
     SystemModule,
+    CurrenciesModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [LogsController],

@@ -2,8 +2,6 @@ import { Injectable, BadRequestException } from "@nestjs/common";
 import { LogsService } from "../logs/logs.service";
 import { TransactionsService } from "../transactions/transactions.service";
 import { UsersService } from "../users/users.service";
-import * as fs from "fs";
-import * as path from "path";
 
 @Injectable()
 export class MaintenanceService {
@@ -15,24 +13,22 @@ export class MaintenanceService {
 
   async backupDatabase() {
     const backup = {
-      users: await this.usersService.exportAllForBackup(),      // ⭐ plain users
+      users: await this.usersService.exportAllForBackup(),
       transactions: await this.transactionsService.findAll(),
       logs: await this.logsService.findAll(),
     };
-
-    const backupDir = path.join(__dirname, "../../backups");
-    if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir);
-
-    const filePath = path.join(backupDir, "backup.json");
-    fs.writeFileSync(filePath, JSON.stringify(backup, null, 2));
-
-    return { message: "Backup created successfully", file: "backup.json" };
+    return backup;
   }
 
   async restoreDatabase(file: Express.Multer.File) {
     if (!file) throw new BadRequestException("No file uploaded");
 
-    const data = JSON.parse(file.buffer.toString());
+    let data;
+    try {
+      data = JSON.parse(file.buffer.toString());
+    } catch (err) {
+      throw new BadRequestException("Backup file is not valid JSON.");
+    }
 
     this.logsService.disableLogging(); // ⭐ no logs during restore
 
@@ -41,15 +37,24 @@ export class MaintenanceService {
       const transactions = data.transactions || [];
       const logs = data.logs || [];
 
-      // 1) Clear in FK-safe order
+      // 1) Clear in FK-safe order (logs, transactions, users)
       await this.logsService.clearAll();
       await this.transactionsService.clearAll();
       await this.usersService.clearAll();
 
-      // 2) Restore in FK-safe order
-      await this.usersService.replaceAll(users);
-      await this.transactionsService.replaceAll(transactions);
-      await this.logsService.replaceAll(logs);
+      // 2) Restore in FK-safe order (users, transactions, logs)
+      if (users.length > 0) {
+        await this.usersService.replaceAll(users);
+      }
+      if (transactions.length > 0) {
+        await this.transactionsService.replaceAll(transactions);
+      }
+      if (logs.length > 0) {
+        await this.logsService.replaceAll(logs);
+      }
+    } catch (err) {
+      // Return error to frontend for debugging
+      throw new BadRequestException(`Restore failed: ${(err as any)?.message || String(err)}`);
     } finally {
       this.logsService.enableLogging();
     }

@@ -86,7 +86,15 @@ export default function PasswordChange() {
 
         <div className={styles.card}>
           <div className={styles.avatar}>
-            {user?.username?.charAt(0)?.toUpperCase()}
+            {user?.profilePicture ? (
+              <img
+                src={`${API_URL}${user.profilePicture}`}
+                alt="Profile"
+                style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
+              />
+            ) : (
+              user?.username?.charAt(0)?.toUpperCase()
+            )}
           </div>
 
           <h2 className={styles.title}>Change Password</h2>

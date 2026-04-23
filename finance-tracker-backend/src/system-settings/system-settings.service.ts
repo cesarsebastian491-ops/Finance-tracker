@@ -73,16 +73,16 @@ export class SystemSettingsService {
     try {
       // 1. Delete in correct order (child → parent)
       console.log('Deleting logs...');
-      await this.logsRepo.createQueryBuilder().delete().execute();
+      await this.logsRepo.createQueryBuilder().delete().where('1=1').execute();
 
       console.log('Deleting transactions...');
-      await this.transactionsRepo.createQueryBuilder().delete().execute();
+      await this.transactionsRepo.createQueryBuilder().delete().where('1=1').execute();
 
       console.log('Deleting users...');
-      await this.usersRepo.createQueryBuilder().delete().execute();
+      await this.usersRepo.createQueryBuilder().delete().where('1=1').execute();
 
       console.log('Deleting system settings...');
-      await this.systemSettingsRepo.createQueryBuilder().delete().execute();
+      await this.systemSettingsRepo.createQueryBuilder().delete().where('1=1').execute();
 
       // 2. Reset auto-increment
       await this.logsRepo.query('ALTER TABLE logs AUTO_INCREMENT = 1');

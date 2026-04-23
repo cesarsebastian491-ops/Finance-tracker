@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards
 } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
@@ -15,6 +16,38 @@ import { Roles } from "../auth/roles.decorator";
 @Controller('transactions')
 export class TransactionsController {
   constructor(private service: TransactionsService) { }
+
+  @Get('categories')
+  async getCategories(
+    @Query('type') type?: 'income' | 'expense',
+    @Query('includeInactive') includeInactive?: string,
+  ) {
+    return this.service.getCategories(type, includeInactive === 'true');
+  }
+
+  @Post('categories')
+  @UseGuards(AuthGuard("jwt"), RolesGuard)
+  @Roles("admin")
+  async createCategory(@Body() dto: { name: string; type: 'income' | 'expense' }) {
+    return this.service.createCategory(dto.name, dto.type);
+  }
+
+  @Put('categories/:id')
+  @UseGuards(AuthGuard("jwt"), RolesGuard)
+  @Roles("admin")
+  async updateCategory(
+    @Param('id') id: number,
+    @Body() dto: { name: string; type: 'income' | 'expense' },
+  ) {
+    return this.service.updateCategory(id, dto.name, dto.type);
+  }
+
+  @Delete('categories/:id')
+  @UseGuards(AuthGuard("jwt"), RolesGuard)
+  @Roles("admin")
+  async deleteCategory(@Param('id') id: number) {
+    return this.service.deleteCategory(id);
+  }
 
   @Get('user/:id')
   async getUserTransactions(@Param('id') id: number) {

@@ -54,17 +54,15 @@ export class AnalyticsService {
     }
 
     async getUsersAnalytics() {
-        const totalUsers = await this.userRepo.count();
-
-        const newUsers = await this.userRepo.count({
-            where: {
-                createdAt: MoreThan(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)),
-            },
-        });
-
         const users = await this.userRepo.find();
+        const totalUsers = users.length;
+
+        const newUsers = users.filter(u =>
+            u.createdAt && new Date(u.createdAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000
+        ).length;
 
         const activeUsers = users.filter(u => this.isOnline(u.lastActive)).length;
+        const activeUsersList = users.filter(u => this.isOnline(u.lastActive));
 
         const usersByRole = await this.userRepo
             .createQueryBuilder("user")
@@ -84,6 +82,22 @@ export class AnalyticsService {
             totalUsers,
             newUsers,
             activeUsers,
+            allUsers: users.map(u => ({
+                id: u.id,
+                firstName: u.firstName,
+                lastName: u.lastName,
+                email: u.email,
+                role: u.role,
+                status: u.status,
+            })),
+            activeUsersList: activeUsersList.map(u => ({
+                id: u.id,
+                firstName: u.firstName,
+                lastName: u.lastName,
+                email: u.email,
+                role: u.role,
+                status: u.status,
+            })),
             usersByRole,
             usersByStatus,
         };
@@ -112,16 +126,16 @@ export class AnalyticsService {
         );
 
         // Totals
-        const totalIncome = incomeList.reduce((sum, t) => sum + t.amount, 0);
-        const totalExpense = expenseList.reduce((sum, t) => sum + t.amount, 0);
+        const totalIncome = incomeList.reduce((sum, t) => sum + (parseFloat(t.amount as any) || 0), 0);
+        const totalExpense = expenseList.reduce((sum, t) => sum + (parseFloat(t.amount as any) || 0), 0);
         const netBalance = totalIncome - totalExpense;
 
         const thisMonthIncome = thisMonthIncomeList.reduce(
-            (sum, t) => sum + t.amount,
+            (sum, t) => sum + (parseFloat(t.amount as any) || 0),
             0,
         );
         const thisMonthExpense = thisMonthExpenseList.reduce(
-            (sum, t) => sum + t.amount,
+            (sum, t) => sum + (parseFloat(t.amount as any) || 0),
             0,
         );
 
@@ -134,11 +148,11 @@ export class AnalyticsService {
 
             const monthIncome = incomeList
                 .filter(t => new Date(t.date).getMonth() === date.getMonth())
-                .reduce((sum, t) => sum + t.amount, 0);
+                .reduce((sum, t) => sum + (parseFloat(t.amount as any) || 0), 0);
 
             const monthExpense = expenseList
                 .filter(t => new Date(t.date).getMonth() === date.getMonth())
-                .reduce((sum, t) => sum + t.amount, 0);
+                .reduce((sum, t) => sum + (parseFloat(t.amount as any) || 0), 0);
 
             incomeVsExpense.unshift({
                 month: monthName,
@@ -264,11 +278,11 @@ export class AnalyticsService {
 
         const income = allTransactions
             .filter(t => t.type === "income")
-            .reduce((sum, t) => sum + t.amount, 0);
+            .reduce((sum, t) => sum + parseFloat(t.amount as any) || 0, 0);
 
         const expense = allTransactions
             .filter(t => t.type === "expense")
-            .reduce((sum, t) => sum + t.amount, 0);
+            .reduce((sum, t) => sum + parseFloat(t.amount as any) || 0, 0);
 
         const thisMonthIncome = allTransactions
             .filter(t => {
@@ -279,7 +293,7 @@ export class AnalyticsService {
                     d.getFullYear() === thisYear
                 );
             })
-            .reduce((sum, t) => sum + t.amount, 0);
+            .reduce((sum, t) => sum + parseFloat(t.amount as any) || 0, 0);
 
         const thisMonthExpense = allTransactions
             .filter(t => {
@@ -290,7 +304,7 @@ export class AnalyticsService {
                     d.getFullYear() === thisYear
                 );
             })
-            .reduce((sum, t) => sum + t.amount, 0);
+            .reduce((sum, t) => sum + parseFloat(t.amount as any) || 0, 0);
 
         const activeUsers = await this.userRepo.count({
             where: { status: "active" },
@@ -324,11 +338,11 @@ export class AnalyticsService {
 
         const income = filtered
             .filter(t => t.type === "income")
-            .reduce((sum, t) => sum + t.amount, 0);
+            .reduce((sum, t) => sum + (parseFloat(t.amount as any) || 0), 0);
 
         const expense = filtered
             .filter(t => t.type === "expense")
-            .reduce((sum, t) => sum + t.amount, 0);
+            .reduce((sum, t) => sum + (parseFloat(t.amount as any) || 0), 0);
 
         return { income, expense };
     }

@@ -14,6 +14,12 @@ export const SECURITY_CONFIG = {
   RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 minutes
   RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
 
+  // CAPTCHA
+  CAPTCHA_ENABLED: (process.env.CAPTCHA_ENABLED || 'true').toLowerCase() === 'true',
+  CAPTCHA_VERIFY_URL:
+    process.env.CAPTCHA_VERIFY_URL || 'https://www.google.com/recaptcha/api/siteverify',
+  CAPTCHA_TIMEOUT_MS: parseInt(process.env.CAPTCHA_TIMEOUT_MS || '5000', 10),
+
   // Session timeout
   SESSION_TIMEOUT_MS: 1800000, // 30 minutes
 
@@ -42,6 +48,9 @@ export const SECURITY_MESSAGES = {
   INVALID_2FA_CODE: 'Invalid 2FA code',
   TOO_MANY_REQUESTS: 'Too many requests. Please try again later',
   SESSION_EXPIRED: 'Your session has expired. Please login again',
+  CAPTCHA_REQUIRED: 'Please complete CAPTCHA verification',
+  CAPTCHA_INVALID: 'CAPTCHA verification failed',
+  CAPTCHA_UNAVAILABLE: 'CAPTCHA verification service is unavailable',
 };
 
 export const LOG_LEVELS = {

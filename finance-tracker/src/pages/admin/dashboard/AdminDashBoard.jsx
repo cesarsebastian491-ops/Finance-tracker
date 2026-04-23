@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import React from "react";
 import { API_URL } from "../../../config";
+import { CurrencyContext } from "../../../context/CurrencyContext";
 import "./AdminDashBoard.css";
 
 export default function AdminDashboard() {
+  const { activeCurrency } = useContext(CurrencyContext);
   const [expandedUser, setExpandedUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -58,6 +60,16 @@ export default function AdminDashboard() {
   };
   
 
+  const totalIncome = transactions
+    .filter(t => t.type === "income")
+    .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+
+  const totalExpense = transactions
+    .filter(t => t.type === "expense")
+    .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+
+  const netBalance = totalIncome - totalExpense;
+
   if (loading) return <p>Loading admin dashboard...</p>;
 
   return (
@@ -78,6 +90,22 @@ export default function AdminDashboard() {
           <div className="summary-card">
             <h3>Total Logs</h3>
             <p>{stats.totalLogs}</p>
+          </div>
+        </div>
+
+        {/* Financial Totals */}
+        <div className="summary-cards">
+          <div className="summary-card">
+            <h3>Total Income</h3>
+            <p style={{ color: "green" }}>{activeCurrency?.symbol}{totalIncome.toFixed(2)}</p>
+          </div>
+          <div className="summary-card">
+            <h3>Total Expenses</h3>
+            <p style={{ color: "red" }}>{activeCurrency?.symbol}{totalExpense.toFixed(2)}</p>
+          </div>
+          <div className="summary-card">
+            <h3>Net Balance</h3>
+            <p style={{ color: netBalance >= 0 ? "green" : "red" }}>{activeCurrency?.symbol}{netBalance.toFixed(2)}</p>
           </div>
         </div>
 
@@ -179,7 +207,7 @@ export default function AdminDashboard() {
                     .map(t => (
                       <tr key={t.id}>
                         <td>{t.user ? `${t.user.firstName} ${t.user.lastName}` : "Unknown"}</td>
-                        <td>${t.amount}</td>
+                        <td>{activeCurrency?.symbol}{t.amount}</td>
                         <td>{t.date}</td>
                       </tr>
                     ))}
@@ -206,7 +234,7 @@ export default function AdminDashboard() {
                     .map(t => (
                       <tr key={t.id}>
                         <td>{t.user ? `${t.user.firstName} ${t.user.lastName}` : "Unknown"}</td>
-                        <td>${t.amount}</td>
+                        <td>{activeCurrency?.symbol}{t.amount}</td>
                         <td>{t.date}</td>
                       </tr>
                     ))}

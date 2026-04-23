@@ -412,6 +412,10 @@ body {
   font-size: 22px;
   font-weight: 700;
   font-family: var(--font-headline);
+  overflow: hidden;
+  padding: 0;
+  border: none;
+  cursor: pointer;
 }
 
 

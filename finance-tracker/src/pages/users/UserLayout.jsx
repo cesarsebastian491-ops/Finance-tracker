@@ -1,17 +1,56 @@
 // src/pages/users/UserLayout.jsx
 import { useState, useEffect } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAppName } from "../../components/hooks/UseAppName";
 import { API_URL } from "../../config";
 
 export default function UserLayout() {
     const [open, setOpen] = useState(true);
     const [showProfile, setShowProfile] = useState(false);
+    const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user")));
+    const location = useLocation();
 
-    const user = JSON.parse(localStorage.getItem("user"));
     const token = user?.access_token;
 
     const appName = useAppName(API_URL, token);
+
+    // Fetch fresh user data from API on mount and re-sync localStorage
+    useEffect(() => {
+        if (!token) return;
+        const stored = JSON.parse(localStorage.getItem("user"));
+        fetch(`${API_URL}/users/${stored?.id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.id) {
+                    const updated = { ...data, access_token: token };
+                    setUser(updated);
+                    localStorage.setItem("user", JSON.stringify(updated));
+                }
+            })
+            .catch(() => { });
+    }, []);
+
+    // Re-sync user from localStorage on route change, focus, or cross-tab storage events
+    useEffect(() => {
+        const stored = JSON.parse(localStorage.getItem("user"));
+        if (stored) setUser(stored);
+    }, [location.pathname]);
+
+    useEffect(() => {
+        const syncUser = () => {
+            const stored = JSON.parse(localStorage.getItem("user"));
+            if (stored) setUser(stored);
+        };
+
+        window.addEventListener("storage", syncUser);
+        window.addEventListener("focus", syncUser);
+        return () => {
+            window.removeEventListener("storage", syncUser);
+            window.removeEventListener("focus", syncUser);
+        };
+    }, []);
 
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem("user"));
@@ -50,7 +89,15 @@ export default function UserLayout() {
                         className="profile-avatar"
                         onClick={() => setShowProfile(!showProfile)}
                     >
-                        {user?.username?.charAt(0)?.toUpperCase()}
+                        {user?.profilePicture ? (
+                            <img
+                                src={`${API_URL}${user.profilePicture}`}
+                                alt="Profile"
+                                style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
+                            />
+                        ) : (
+                            user?.username?.charAt(0)?.toUpperCase()
+                        )}
                     </button>
                 </div>
 
@@ -64,7 +111,15 @@ export default function UserLayout() {
                         <div className="profile-popup">
                             <div className="profile-header">
                                 <div className="profile-avatar">
-                                    {user?.username?.charAt(0)?.toUpperCase()}
+                                    {user?.profilePicture ? (
+                                        <img
+                                            src={`${API_URL}${user.profilePicture}`}
+                                            alt="Profile"
+                                            style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
+                                        />
+                                    ) : (
+                                        user?.username?.charAt(0)?.toUpperCase()
+                                    )}
                                 </div>
 
                                 <div>

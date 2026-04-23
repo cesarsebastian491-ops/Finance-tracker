@@ -5,12 +5,15 @@ import {
   UseGuards,
   UploadedFile,
   UseInterceptors,
+  Res,
+  StreamableFile,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { MaintenanceService } from "./maintenance.service";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { RolesGuard } from "../auth/roles.guard";
 import { Roles } from "../auth/roles.decorator";
+import type { Response } from "express";
 
 @Controller("maintenance")
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -19,8 +22,13 @@ export class MaintenanceController {
   constructor(private readonly maintenanceService: MaintenanceService) {}
 
   @Post("backup")
-  backup() {
-    return this.maintenanceService.backupDatabase();
+  async backup(@Res({ passthrough: true }) res: Response): Promise<StreamableFile> {
+    const data = await this.maintenanceService.backupDatabase();
+    res.set({
+      'Content-Type': 'application/json',
+      'Content-Disposition': 'attachment; filename="backup.json"',
+    });
+    return new StreamableFile(Buffer.from(JSON.stringify(data, null, 2)));
   }
 
   @Post("restore")
