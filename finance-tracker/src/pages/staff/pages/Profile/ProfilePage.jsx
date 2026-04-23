@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { API_URL } from "../../../../config";
 import styles from "./ProfilePage.module.css";
 import "../../Components/staffTheme.css";
@@ -10,6 +10,8 @@ export default function StaffProfile() {
   const [pwForm, setPwForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const [msg, setMsg] = useState({ text: "", type: "" });
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   const stored = JSON.parse(localStorage.getItem("user"));
   const token = stored?.access_token;
@@ -97,7 +99,66 @@ export default function StaffProfile() {
 
       {/* Avatar card */}
       <div className={styles.card}>
-        <div className={styles.avatar}>{initial}</div>
+        <div 
+          className={styles.avatarWrap} 
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <div className={styles.avatar}>
+            {user?.profilePicture ? (
+              <img
+                src={`${API_URL}${user.profilePicture}`}
+                alt="Profile"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+              />
+            ) : (
+              initial
+            )}
+          </div>
+          <div className={styles.avatarOverlay}>
+            {uploading ? "Uploading..." : "Change Photo"}
+          </div>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          style={{ display: "none" }}
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+
+            const storedUser = JSON.parse(localStorage.getItem("user"));
+            const token = storedUser?.access_token;
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            setUploading(true);
+            try {
+              const res = await fetch(`${API_URL}/users/me/profile-picture`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` },
+                body: formData,
+              });
+
+              if (!res.ok) throw new Error("Upload failed");
+
+              const updated = await res.json();
+              setUser(updated);
+              localStorage.setItem(
+                "user",
+                JSON.stringify({ ...updated, access_token: token })
+              );
+              showMsg("Profile picture updated successfully!");
+            } catch (err) {
+              console.error("Upload error:", err);
+              showMsg("Failed to upload profile picture.", "error");
+            } finally {
+              setUploading(false);
+              e.target.value = "";
+            }
+          }}
+        />
         <div className={styles.cardInfo}>
           <h2 className={styles.name}>{user.firstName} {user.lastName}</h2>
           <p className={styles.sub}>@{user.username} &nbsp;·&nbsp;
