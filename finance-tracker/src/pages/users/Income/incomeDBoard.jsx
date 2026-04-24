@@ -22,9 +22,16 @@ export default function IncomeDBoard({ role } = {}) {
 
   
 
-
     // ⭐ SAME AS EXPENSE DASHBOARD
-    const storedUser = JSON.parse(localStorage.getItem("user"));
+    let storedUser = null;
+    try {
+        const stored = localStorage.getItem("user");
+        storedUser = stored ? JSON.parse(stored) : null;
+    } catch (err) {
+        console.error("Failed to parse user data from localStorage", err);
+        localStorage.removeItem("user");
+        storedUser = null;
+    }
     const userId = storedUser?.id;
 
     // ⭐ Load user-specific transactions

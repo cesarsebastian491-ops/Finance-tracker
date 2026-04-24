@@ -4,7 +4,15 @@ import { API_URL } from "../../../../config";
 import { Navigate } from "react-router-dom";
 
 export default function SystemMaintenancePage() {
-  const user = JSON.parse(localStorage.getItem("user"));
+  let user = null;
+  try {
+    const storedData = localStorage.getItem("user");
+    user = storedData ? JSON.parse(storedData) : null;
+  } catch (err) {
+    console.error("Failed to parse user data from localStorage", err);
+    localStorage.removeItem("user");
+    user = null;
+  }
 
   const [modal, setModal] = useState(null);
   const fileInputRef = useRef(null);

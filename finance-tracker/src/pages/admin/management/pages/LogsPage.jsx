@@ -12,7 +12,16 @@ export default function LogsPage() {
     const [dateRange, setDateRange] = useState({ from: "", to: "" });
     const [sortConfig, setSortConfig] = useState({ key: "timestamp", direction: "desc" });
 
-    const token = JSON.parse(localStorage.getItem("user"))?.access_token;
+    let storedUser = null;
+    try {
+        const storedData = localStorage.getItem("user");
+        storedUser = storedData ? JSON.parse(storedData) : null;
+    } catch (err) {
+        console.error("Failed to parse user data from localStorage", err);
+        localStorage.removeItem("user");
+        storedUser = null;
+    }
+    const token = storedUser?.access_token;
 
     const fetchLogs = async () => {
         const res = await fetch(`${API_URL}/logs/admin/all`, {

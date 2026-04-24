@@ -33,7 +33,15 @@ export default function SystemSettingsPage() {
 
   // Load current app name
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("user"));
+    let stored = null;
+    try {
+      const storedData = localStorage.getItem("user");
+      stored = storedData ? JSON.parse(storedData) : null;
+    } catch (err) {
+      console.error("Failed to parse user data from localStorage", err);
+      localStorage.removeItem("user");
+      stored = null;
+    }
     const token = stored?.access_token;
 
     fetch(`${API_URL}/system-settings/app-name`, {
@@ -56,7 +64,15 @@ export default function SystemSettingsPage() {
 
   // Load system info
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("user"));
+    let stored = null;
+    try {
+      const storedData = localStorage.getItem("user");
+      stored = storedData ? JSON.parse(storedData) : null;
+    } catch (err) {
+      console.error("Failed to parse user data from localStorage", err);
+      localStorage.removeItem("user");
+      stored = null;
+    }
     const token = stored?.access_token;
 
     fetch(`${API_URL}/system-settings/system-info`, {

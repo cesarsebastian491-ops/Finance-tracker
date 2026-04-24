@@ -13,7 +13,15 @@ export default function StaffProfile() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
 
-  const stored = JSON.parse(localStorage.getItem("user"));
+  let stored = null;
+  try {
+    const storedData = localStorage.getItem("user");
+    stored = storedData ? JSON.parse(storedData) : null;
+  } catch (err) {
+    console.error("Failed to parse user data from localStorage", err);
+    localStorage.removeItem("user");
+    stored = null;
+  }
   const token = stored?.access_token;
 
   const fetchProfile = async () => {

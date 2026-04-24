@@ -20,8 +20,15 @@ export default function expenseDBoard({ role } = {}) {
     const tableRef = useRef(null);
     const [sortOrder, setSortOrder] = useState("asc"); // "asc" = oldest first
 
-
-    const storedUser = JSON.parse(localStorage.getItem("user"));
+    let storedUser = null;
+    try {
+        const stored = localStorage.getItem("user");
+        storedUser = stored ? JSON.parse(stored) : null;
+    } catch (err) {
+        console.error("Failed to parse user data from localStorage", err);
+        localStorage.removeItem("user");
+        storedUser = null;
+    }
 
     const userId = storedUser?.id;
 
@@ -60,11 +67,20 @@ export default function expenseDBoard({ role } = {}) {
         if (!confirm(`Delete ${label}?`)) return;
 
         try {
-            const storedUser = JSON.parse(localStorage.getItem("user"));
-            if (!storedUser?.access_token) {
+            let deleteStoredUser = null;
+            try {
+                const stored = localStorage.getItem("user");
+                deleteStoredUser = stored ? JSON.parse(stored) : null;
+            } catch (err) {
+                console.error("Failed to parse user data from localStorage", err);
+                localStorage.removeItem("user");
+                deleteStoredUser = null;
+            }
+            if (!deleteStoredUser?.access_token) {
                 alert("Session expired. Please login again.");
                 return;
             }
+            const storedUser = deleteStoredUser;
 
             await fetch(
                 `${API_URL}/transactions/delete-expense/${expense.id}/${userId}`,
@@ -89,7 +105,15 @@ export default function expenseDBoard({ role } = {}) {
 
     async function loadData() {
         try {
-            const storedUser = JSON.parse(localStorage.getItem("user"));
+            let storedUser = null;
+            try {
+                const stored = localStorage.getItem("user");
+                storedUser = stored ? JSON.parse(stored) : null;
+            } catch (err) {
+                console.error("Failed to parse user data from localStorage", err);
+                localStorage.removeItem("user");
+                storedUser = null;
+            }
             if (!storedUser) return;
 
             const url = isStaff

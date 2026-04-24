@@ -4,7 +4,15 @@ import { API_URL } from "../../../../config";
 
 export default function SystemSecurityPage() {
   const [sessions, setSessions] = useState([]);
-  const user = JSON.parse(localStorage.getItem("user"));
+  let user = null;
+  try {
+    const storedData = localStorage.getItem("user");
+    user = storedData ? JSON.parse(storedData) : null;
+  } catch (err) {
+    console.error("Failed to parse user data from localStorage", err);
+    localStorage.removeItem("user");
+    user = null;
+  }
   const token = user?.access_token;
 
   async function loadSessions() {
