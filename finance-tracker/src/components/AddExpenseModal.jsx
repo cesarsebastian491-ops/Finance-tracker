@@ -18,7 +18,17 @@ export default function AddExpenseModal({ open, onClose, onSubmit, editData }) {
     const { activeCurrency } = useContext(CurrencyContext);
     const [showChargesModal, setShowChargesModal] = useState(false);
     const [showRecurringModal, setShowRecurringModal] = useState(false);
-    const user = JSON.parse(localStorage.getItem("user"));
+    
+    let user = null;
+    try {
+        const stored = localStorage.getItem("user");
+        user = stored ? JSON.parse(stored) : null;
+    } catch (e) {
+        console.error("Corrupted user data", e);
+        localStorage.removeItem("user");
+        user = null;
+    }
+    
     const [form, setForm] = useState({
         expense: "",
         category: "",

@@ -95,23 +95,36 @@ export default function Register() {
 
     const payload = { ...form, captchaId, captchaCode: captchaInput };
 
-    const res = await fetch(`${API_URL}/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    try {
+      const res = await fetch(`${API_URL}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    const data = await res.json();
+      if (!res.ok) {
+        const error = await res.json();
+        await loadCaptcha();
+        alert(error.message || "Registration failed");
+        return;
+      }
 
-    if (data.success) {
-      setIsExiting(true);
-      setTimeout(() => {
-        alert("Registered successfully!");
-        navigate("/", { replace: true });
-      }, 600);
-    } else {
+      const data = await res.json();
+
+      if (data.success) {
+        setIsExiting(true);
+        setTimeout(() => {
+          alert("Registered successfully!");
+          navigate("/", { replace: true });
+        }, 600);
+      } else {
+        await loadCaptcha();
+        alert(data.message || "Registration failed");
+      }
+    } catch (err) {
+      console.error("Registration error:", err);
       await loadCaptcha();
-      alert(data.message || "Registration failed");
+      alert("Network error during registration. Please try again.");
     }
   };
 

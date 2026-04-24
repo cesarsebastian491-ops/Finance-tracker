@@ -60,9 +60,20 @@ export default function expenseDBoard({ role } = {}) {
         if (!confirm(`Delete ${label}?`)) return;
 
         try {
+            const storedUser = JSON.parse(localStorage.getItem("user"));
+            if (!storedUser?.access_token) {
+                alert("Session expired. Please login again.");
+                return;
+            }
+
             await fetch(
                 `${API_URL}/transactions/delete-expense/${expense.id}/${userId}`,
-                { method: "DELETE" }
+                {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${storedUser.access_token}`,
+                    },
+                }
             );
 
             setSelectedExpense(null);

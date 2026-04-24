@@ -28,14 +28,15 @@ export default function ForgotPassword() {
         body: JSON.stringify({ email }),
       });
 
+      if (!res.ok) {
+        const error = await res.json();
+        setError(error.message || "Failed to send reset code");
+        return;
+      }
+
       const data = await res.json();
 
       if (data.success) {
-        // For testing - show the test code in console
-        if (data.testCode) {
-          setTestCode(data.testCode);
-          console.log(`Test Code: ${data.testCode}`);
-        }
         setStep("verify");
       } else {
         setError(data.message || "Failed to send reset code");
@@ -178,12 +179,6 @@ export default function ForgotPassword() {
                     {showConfirmPassword ? "👁️" : "👁️‍🗨️"}
                   </button>
                 </div>
-
-                {testCode && (
-                  <div className={styles.testCodeBox}>
-                    <p>🧪 Testing? Use code: <strong>{testCode}</strong></p>
-                  </div>
-                )}
 
                 {error && <div className={styles.error}>{error}</div>}
 

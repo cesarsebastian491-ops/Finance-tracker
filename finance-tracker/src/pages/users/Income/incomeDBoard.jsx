@@ -54,6 +54,12 @@ export default function IncomeDBoard({ role } = {}) {
     // ⭐ Add or Edit Income
     async function handleAddIncome(data) {
         try {
+            const storedUser = JSON.parse(localStorage.getItem("user"));
+            if (!storedUser?.access_token) {
+                alert("Session expired. Please login again.");
+                return;
+            }
+
             const payload = {
                 ...data,
                 user: { id: userId }   // ⭐ correct structure
@@ -62,13 +68,19 @@ export default function IncomeDBoard({ role } = {}) {
             if (editData) {
                 await fetch(`${API_URL}/transactions/update-income/${editData.id}`, {
                     method: "PUT",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${storedUser.access_token}`,
+                    },
                     body: JSON.stringify(payload),
                 });
             } else {
                 await fetch(`${API_URL}/transactions/add-income`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${storedUser.access_token}`,
+                    },
                     body: JSON.stringify(payload),
                 });
             }
@@ -86,9 +98,20 @@ export default function IncomeDBoard({ role } = {}) {
         if (!confirm(`Delete ${getIncomeTitle(income)}?`)) return;
 
         try {
+            const storedUser = JSON.parse(localStorage.getItem("user"));
+            if (!storedUser?.access_token) {
+                alert("Session expired. Please login again.");
+                return;
+            }
+
             await fetch(
                 `${API_URL}/transactions/delete-income/${income.id}/${userId}`,
-                { method: "DELETE" }
+                {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${storedUser.access_token}`,
+                    },
+                }
             );
 
             setSelectedIncome(null); // Close the modal after delete

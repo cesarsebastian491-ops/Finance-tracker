@@ -11,14 +11,19 @@ export default function Login() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const stored = localStorage.getItem("user");
-        if (!stored) return;
+        try {
+            const stored = localStorage.getItem("user");
+            if (!stored) return;
 
-        const user = JSON.parse(stored);
+            const user = JSON.parse(stored);
 
-        if (user.role === "admin") navigate("/admin", { replace: true });
-        else if (user.role === "staff") navigate("/staff", { replace: true });
-        else navigate("/user/dashboard", { replace: true });
+            if (user.role === "admin") navigate("/admin", { replace: true });
+            else if (user.role === "staff") navigate("/staff", { replace: true });
+            else navigate("/user/dashboard", { replace: true });
+        } catch (e) {
+            console.error("Corrupted user data in localStorage", e);
+            localStorage.removeItem("user");
+        }
     }, []);
 
     const [form, setForm] = useState({ email: "", password: "" });
@@ -113,33 +118,44 @@ export default function Login() {
     };
 
     const handle2FAVerify = async () => {
-        const res = await fetch(`${API_URL}/auth/2fa/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId: tempUserId, code }),
-        });
+        try {
+            const res = await fetch(`${API_URL}/auth/2fa/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: tempUserId, code }),
+            });
 
-        const data = await res.json();
+            if (!res.ok) {
+                const error = await res.json();
+                alert(error.message || "Invalid 2FA code");
+                return;
+            }
 
-        if (!data.success) {
-            alert("Invalid 2FA code");
-            return;
+            const data = await res.json();
+
+            if (!data.success || !data.user || !data.access_token) {
+                alert("Invalid 2FA code");
+                return;
+            }
+
+            localStorage.setItem(
+                "user",
+                JSON.stringify({
+                    ...data.user,
+                    access_token: data.access_token,
+                })
+            );
+
+            setIsExiting(true);
+            setTimeout(() => {
+                if (data.user.role === "admin") navigate("/admin");
+                else if (data.user.role === "staff") navigate("/staff");
+                else navigate("/user/dashboard");
+            }, 600);
+        } catch (err) {
+            console.error("2FA verification error:", err);
+            alert("Network error during 2FA verification. Please try again.");
         }
-
-        localStorage.setItem(
-            "user",
-            JSON.stringify({
-                ...data.user,
-                access_token: data.access_token,
-            })
-        );
-
-        setIsExiting(true);
-        setTimeout(() => {
-            if (data.user.role === "admin") navigate("/admin");
-            else if (data.user.role === "staff") navigate("/staff");
-            else navigate("/user/dashboard");
-        }, 600);
     };
 
     return (
