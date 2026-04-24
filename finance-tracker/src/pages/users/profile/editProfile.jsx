@@ -9,6 +9,8 @@ export default function EditProfile() {
   const [initialForm, setInitialForm] = useState({});
   const navigate = useNavigate();
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState("success"); // "success" or "error"
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
 
@@ -69,7 +71,10 @@ export default function EditProfile() {
       );
 
       if (!hasChanges) {
-        alert("No changes to save");
+        setToastMessage("No changes to save");
+        setToastType("error");
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
         return;
       }
 
@@ -99,6 +104,8 @@ export default function EditProfile() {
         })
       );
 
+      setToastMessage("Profile updated successfully!");
+      setToastType("success");
       setShowToast(true);
 
       setTimeout(() => {
@@ -108,15 +115,19 @@ export default function EditProfile() {
 
     } catch (err) {
       console.error(err);
+      setToastMessage("Failed to update profile");
+      setToastType("error");
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
     }
   };
 
   return (
     <>
       {showToast && (
-        <div className={styles.successOverlay}>
+        <div className={styles.successOverlay} style={{backgroundColor: toastType === "error" ? "rgba(220, 38, 38, 0.9)" : "rgba(16, 185, 129, 0.9)"}}>
           <div className={styles.successBox}>
-            <p>Profile updated successfully!</p>
+            <p>{toastMessage}</p>
           </div>
         </div>
       )}
@@ -174,9 +185,20 @@ export default function EditProfile() {
                   "user",
                   JSON.stringify({ ...updated, access_token: token })
                 );
+                
+                // Show success toast
+                setToastMessage("Profile picture updated successfully!");
+                setToastType("success");
+                setShowToast(true);
+                setTimeout(() => setShowToast(false), 3000);
               } catch (err) {
                 console.error("Upload error:", err);
-                alert("Failed to upload profile picture");
+                
+                // Show error toast
+                setToastMessage("Failed to upload profile picture");
+                setToastType("error");
+                setShowToast(true);
+                setTimeout(() => setShowToast(false), 3000);
               } finally {
                 setUploading(false);
                 e.target.value = "";
