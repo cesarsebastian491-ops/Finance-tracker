@@ -7,7 +7,16 @@ import { API_URL } from "../../config";
 export default function UserLayout() {
     const [open, setOpen] = useState(true);
     const [showProfile, setShowProfile] = useState(false);
-    const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user")));
+    const [user, setUser] = useState(() => {
+        try {
+            const stored = localStorage.getItem("user");
+            return stored ? JSON.parse(stored) : null;
+        } catch (err) {
+            console.error("Failed to parse user data from localStorage", err);
+            localStorage.removeItem("user");
+            return null;
+        }
+    });
     const location = useLocation();
 
     const token = user?.access_token;
@@ -17,8 +26,17 @@ export default function UserLayout() {
     // Fetch fresh user data from API on mount and re-sync localStorage
     useEffect(() => {
         if (!token) return;
-        const stored = JSON.parse(localStorage.getItem("user"));
-        fetch(`${API_URL}/users/${stored?.id}`, {
+        let stored = null;
+        try {
+            const storedData = localStorage.getItem("user");
+            stored = storedData ? JSON.parse(storedData) : null;
+        } catch (err) {
+            console.error("Failed to parse user data from localStorage", err);
+            localStorage.removeItem("user");
+            stored = null;
+        }
+        if (!stored?.id) return;
+        fetch(`${API_URL}/users/${stored.id}`, {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then(res => res.json())
@@ -34,13 +52,29 @@ export default function UserLayout() {
 
     // Re-sync user from localStorage on route change, focus, or cross-tab storage events
     useEffect(() => {
-        const stored = JSON.parse(localStorage.getItem("user"));
+        let stored = null;
+        try {
+            const storedData = localStorage.getItem("user");
+            stored = storedData ? JSON.parse(storedData) : null;
+        } catch (err) {
+            console.error("Failed to parse user data from localStorage", err);
+            localStorage.removeItem("user");
+            stored = null;
+        }
         if (stored) setUser(stored);
     }, [location.pathname]);
 
     useEffect(() => {
         const syncUser = () => {
-            const stored = JSON.parse(localStorage.getItem("user"));
+            let stored = null;
+            try {
+                const storedData = localStorage.getItem("user");
+                stored = storedData ? JSON.parse(storedData) : null;
+            } catch (err) {
+                console.error("Failed to parse user data from localStorage", err);
+                localStorage.removeItem("user");
+                stored = null;
+            }
             if (stored) setUser(stored);
         };
 
@@ -53,7 +87,15 @@ export default function UserLayout() {
     }, []);
 
     useEffect(() => {
-        const user = JSON.parse(localStorage.getItem("user"));
+        let user = null;
+        try {
+            const storedData = localStorage.getItem("user");
+            user = storedData ? JSON.parse(storedData) : null;
+        } catch (err) {
+            console.error("Failed to parse user data from localStorage", err);
+            localStorage.removeItem("user");
+            user = null;
+        }
         const token = user?.access_token;
         if (!token) return;
 
