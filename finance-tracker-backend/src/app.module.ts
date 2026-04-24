@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TransactionsModule } from './transactions/transactions.module';
 import { UsersModule } from './users/users.module';
@@ -15,6 +15,7 @@ import { CurrenciesModule } from './currencies/currencies.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { LastActiveInterceptor } from './auth/last-active.interceptor';
 import { ScheduleModule } from '@nestjs/schedule';
+import { RateLimitMiddleware } from './common/middleware/rate-limit.middleware';
 
 @Module({
   imports: [
@@ -51,4 +52,11 @@ import { ScheduleModule } from '@nestjs/schedule';
     },
   ],
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    // Only apply rate limiting in production to avoid throttling local development
+    if (process.env.NODE_ENV === 'production') {
+      consumer.apply(RateLimitMiddleware).forRoutes('*');
+    }
+  }
+}

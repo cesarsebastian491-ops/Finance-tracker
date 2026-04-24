@@ -1,4 +1,9 @@
 const getApiUrl = () => {
+  // Production: set VITE_API_URL in your hosting environment
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+
   const host = window.location.hostname;
 
   // Laptop (localhost)

@@ -22,7 +22,7 @@ import { LastActiveInterceptor } from './last-active.interceptor';
     TypeOrmModule.forFeature([User]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
-      secret: 'SECRET_KEY',
+      secret: process.env.JWT_SECRET || 'dev-secret-key-change-in-production',
       signOptions: { expiresIn: '1d' },
     }),
   ],

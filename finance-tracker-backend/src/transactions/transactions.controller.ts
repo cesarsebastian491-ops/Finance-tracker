@@ -7,7 +7,9 @@ import {
   Body,
   Param,
   Query,
-  UseGuards
+  UseGuards,
+  Req,
+  ForbiddenException,
 } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { AuthGuard } from "@nestjs/passport";
@@ -50,7 +52,11 @@ export class TransactionsController {
   }
 
   @Get('user/:id')
-  async getUserTransactions(@Param('id') id: number) {
+  @UseGuards(AuthGuard("jwt"))
+  async getUserTransactions(@Param('id') id: number, @Req() req) {
+    if (req.user.role !== 'admin' && req.user.id !== +id) {
+      throw new ForbiddenException('You can only access your own transactions');
+    }
     return this.service.findByUser(id);
   }
 
@@ -73,6 +79,7 @@ export class TransactionsController {
 
   // EXPENSE ROUTES
   @Post('add-expense')
+  @UseGuards(AuthGuard("jwt"))
   addExpense(@Body() dto) {
 
     // ⭐ Convert boolean → tinyint for MySQL
@@ -82,6 +89,7 @@ export class TransactionsController {
   }
 
   @Put('update-expense/:id')
+  @UseGuards(AuthGuard("jwt"))
   updateExpense(@Param('id') id: number, @Body() dto) {
 
     // ⭐ Convert boolean → tinyint for MySQL
@@ -93,12 +101,14 @@ export class TransactionsController {
   }
 
   @Delete('delete-expense/:id/:userId')
+  @UseGuards(AuthGuard("jwt"))
   deleteExpense(@Param('id') id: number, @Param('userId') userId: number) {
     return this.service.deleteExpense(id, userId);
   }
 
   // INCOME ROUTES
   @Post('add-income')
+  @UseGuards(AuthGuard("jwt"))
   addIncome(@Body() dto) {
     // ⭐ Convert boolean → tinyint for MySQL
     dto.isRecurring = dto.isRecurring ? 1 : 0;
@@ -107,6 +117,7 @@ export class TransactionsController {
   }
 
   @Put('update-income/:id')
+  @UseGuards(AuthGuard("jwt"))
   updateIncome(@Param('id') id: number, @Body() dto) {
     // ⭐ Convert boolean → tinyint for MySQL
     if (dto.isRecurring !== undefined) {
@@ -117,6 +128,7 @@ export class TransactionsController {
   }
 
   @Delete('delete-income/:id/:userId')
+  @UseGuards(AuthGuard("jwt"))
   deleteIncome(@Param('id') id: number, @Param('userId') userId: number) {
     return this.service.deleteIncome(id, userId);
   }

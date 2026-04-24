@@ -84,13 +84,11 @@ export class AuthService {
     this.passwordResetCodes.set(email, { code: resetCode, expiresAt });
 
     // In production, send this code via email
-    console.log(`🔐 PASSWORD RESET CODE for ${email}: ${resetCode}`, `Expires in 15 minutes`);
+    // TODO: integrate email service before go-live
 
     return {
       success: true,
       message: 'Reset code sent to email',
-      // Remove in production - only for testing
-      testCode: resetCode,
     };
   }
 
