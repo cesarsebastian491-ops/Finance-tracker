@@ -196,10 +196,17 @@ export default function RunningBalancePage({ role } = {}) {
                 : `${API_URL}/transactions/user/${user.id}`;
 
             const res = await fetch(url, {
-                headers: isStaff ? { Authorization: `Bearer ${user.access_token}` } : {},
+                headers: { Authorization: `Bearer ${user.access_token}` }
             });
+            
+            if (!res.ok) {
+                console.error("Failed to load transactions:", res.status);
+                setTransactions([]);
+                return;
+            }
+            
             const data = await res.json();
-            setTransactions(data);
+            setTransactions(Array.isArray(data) ? data : []);
         }
 
         loadData();

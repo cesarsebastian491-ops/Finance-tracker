@@ -121,11 +121,17 @@ export default function expenseDBoard({ role } = {}) {
                 : `${API_URL}/transactions/user/${storedUser.id}`;
 
             const res = await fetch(url, {
-                headers: isStaff ? { Authorization: `Bearer ${storedUser.access_token}` } : {},
+                headers: { Authorization: `Bearer ${storedUser.access_token}` }
             });
+            
+            if (!res.ok) {
+                console.error("Failed to load transactions:", res.status);
+                setTransactions([]);
+                return;
+            }
+            
             const data = await res.json();
-
-            setTransactions(data);
+            setTransactions(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error("Error loading transactions:", err);
         }

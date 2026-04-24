@@ -325,22 +325,22 @@ export default function AddExpenseModal({ open, onClose, onSubmit, editData }) {
 
                         <div className={styles.modalSection}>
                             <label>Tax</label>
-                            <input type="number" name="tax" value={form.tax} onChange={handleChange} />
+                            <input type="number" step="0.01" name="tax" value={form.tax} onChange={handleChange} />
                         </div>
 
                         <div className={styles.modalSection}>
                             <label>Service Fee</label>
-                            <input type="number" name="serviceFee" value={form.serviceFee} onChange={handleChange} />
+                            <input type="number" step="0.01" name="serviceFee" value={form.serviceFee} onChange={handleChange} />
                         </div>
 
                         <div className={styles.modalSection}>
                             <label>Discount</label>
-                            <input type="number" name="discount" value={form.discount} onChange={handleChange} />
+                            <input type="number" step="0.01" name="discount" value={form.discount} onChange={handleChange} />
                         </div>
 
                         <div className={styles.modalSection}>
                             <label>Other Charges</label>
-                            <input type="number" name="otherCharge" value={form.otherCharge} onChange={handleChange} />
+                            <input type="number" step="0.01" name="otherCharge" value={form.otherCharge} onChange={handleChange} />
                         </div>
 
                         <div className={styles.subModalActions}>

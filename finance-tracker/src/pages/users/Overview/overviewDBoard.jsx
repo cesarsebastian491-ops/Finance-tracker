@@ -127,7 +127,16 @@ export default function overviewDBoard({ role } = {}) {
     // timefilter label end
     // get user info start
     useEffect(() => {
-        const storedUser = JSON.parse(localStorage.getItem("user"));
+        let storedUser = null;
+        try {
+            const stored = localStorage.getItem("user");
+            storedUser = stored ? JSON.parse(stored) : null;
+        } catch (err) {
+            console.error("Failed to parse user data from localStorage", err);
+            localStorage.removeItem("user");
+            storedUser = null;
+        }
+        
         if (!storedUser && !isStaff) {
             window.location.href = "/";
             return;
@@ -139,15 +148,27 @@ export default function overviewDBoard({ role } = {}) {
         if (!user) return; // prevent undefined fetch
 
         async function loadData() {
-            const url = isStaff
-                ? `${API_URL}/analytics/staff/transactions`
-                : `${API_URL}/transactions/user/${user.id}`;
+            try {
+                const url = isStaff
+                    ? `${API_URL}/analytics/staff/transactions`
+                    : `${API_URL}/transactions/user/${user.id}`;
 
-            const res = await fetch(url, {
-                headers: isStaff ? { Authorization: `Bearer ${user.access_token}` } : {},
-            });
-            const data = await res.json();
-            setTransactions(data);
+                const res = await fetch(url, {
+                    headers: { Authorization: `Bearer ${user.access_token}` }
+                });
+                
+                if (!res.ok) {
+                    console.error("Failed to load transactions:", res.status);
+                    setTransactions([]);
+                    return;
+                }
+                
+                const data = await res.json();
+                setTransactions(Array.isArray(data) ? data : []);
+            } catch (err) {
+                console.error("Error loading transactions:", err);
+                setTransactions([]);
+            }
         }
 
         loadData();

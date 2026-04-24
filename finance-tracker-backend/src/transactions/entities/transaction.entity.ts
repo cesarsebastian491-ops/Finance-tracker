@@ -19,21 +19,21 @@ export class Transaction {
   @Column({ nullable: true })
   source: string;
 
-  @Column('decimal')
+  @Column({ type: 'decimal', precision: 12, scale: 2 })
   amount: number;
 
   // ⭐ ADDITIONAL AMOUNTS
-  @Column({ type: 'decimal', nullable: true })
-  tax: number;
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  tax: number | null;
 
-  @Column({ type: 'decimal', nullable: true })
-  serviceFee: number;
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  serviceFee: number | null;
 
-  @Column({ type: 'decimal', nullable: true })
-  discount: number;
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  discount: number | null;
 
-  @Column({ type: 'decimal', nullable: true })
-  otherCharge: number;
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  otherCharge: number | null;
 
   @Column({ type: 'timestamp' })
   date: Date;
