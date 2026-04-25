@@ -440,7 +440,7 @@ export default function expenseDBoard({ role } = {}) {
                                             <th>Expense</th>
                                             <th>Category</th>
                                             <th>Date</th>
-                                            <th>Additional Charges</th>
+                                            <th className={styles.hideOnScreen}>Additional Charges</th>
                                             <th>Amount</th>
                                             <th>Recurring</th>
                                         </tr>
@@ -464,7 +464,7 @@ export default function expenseDBoard({ role } = {}) {
                                                     <td>{exp.expense}</td>
                                                     <td>{exp.category}</td>
                                                     <td>{formatDate(exp.date)}</td>
-                                                    <td className={styles.expenseAmount}>{formatAdditionalCharges(calculateExpenseAdditionalCharges(exp))}</td>
+                                                    <td className={`${styles.expenseAmount} ${styles.hideOnScreen}`}>{formatAdditionalCharges(calculateExpenseAdditionalCharges(exp))}</td>
                                                     <td className={styles.expenseAmount}>{formatMoney((Number(exp.amount) || 0) + calculateExpenseAdditionalCharges(exp))}</td>
                                                     <td className={exp.isRecurring ? styles.recurringYes : styles.recurringNo}>
                                                         {exp.isRecurring ? "Yes" : ""}

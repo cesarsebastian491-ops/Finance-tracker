@@ -339,3 +339,17 @@
         transform: translateY(0);
     }
 }
+
+/* -------------------------------------------------- */
+/* PRINT & EXPORT STYLES                             */
+/* -------------------------------------------------- */
+
+.hideOnScreen {
+    display: none;
+}
+
+@media print {
+    .hideOnScreen {
+        display: table-cell !important;
+    }
+}
