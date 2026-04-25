@@ -242,20 +242,36 @@ export default function RunningBalancePage({ role } = {}) {
 
         const headers = [
             "Title",
-            "Date",
             "Category",
-            "Expense",
-            "Income",
-            "Running Balance"
+            "Date",
+            "Amount",
+            "Tax",
+            "Service Fee",
+            "Discount",
+            "Other Charge",
+            "Total",
+            "Type",
+            "Running Balance",
+            "Recurring",
+            "Recurring Start",
+            "Recurring End"
         ];
 
         const values = rows.map(tx => [
             tx.type === "income" ? (tx.source || "—") : (tx.expense || "—"),
-            formatDate(tx.date),
             tx.category || "—",
-            tx.type === "expense" ? formatMoney(getTotalWithCharges(tx)) : "",
-            tx.type === "income" ? formatMoney(getTotalWithCharges(tx)) : "",
-            formatMoney(tx.runningBalance)
+            formatDate(tx.date),
+            formatMoney(Number(tx.amount) || 0),
+            formatMoney(Number(tx.tax) || 0),
+            formatMoney(Number(tx.serviceFee) || 0),
+            formatMoney(Number(tx.discount) || 0),
+            formatMoney(Number(tx.otherCharge) || 0),
+            formatMoney(getTotalWithCharges(tx)),
+            tx.type === "income" ? "Income" : "Expense",
+            formatMoney(tx.runningBalance),
+            tx.isRecurring ? "Yes" : "",
+            tx.isRecurring ? formatDate(tx.date) : "",
+            tx.isRecurring ? (tx.recurringEndDate ? formatDate(tx.recurringEndDate) : "No end date") : ""
         ]);
 
         const csvContent =
@@ -329,9 +345,19 @@ export default function RunningBalancePage({ role } = {}) {
                                             <th>Title</th>
                                             <th>Date</th>
                                             <th>Category</th>
-                                            <th>Expense</th>
-                                            <th>Income</th>
+                                            <th className={styles.screenOnly}>Expense</th>
+                                            <th className={styles.screenOnly}>Income</th>
+                                            <th className={styles.hideOnPrint}>Amount</th>
+                                            <th className={styles.hideOnPrint}>Tax</th>
+                                            <th className={styles.hideOnPrint}>Service Fee</th>
+                                            <th className={styles.hideOnPrint}>Discount</th>
+                                            <th className={styles.hideOnPrint}>Other Charge</th>
+                                            <th className={styles.hideOnPrint}>Total</th>
+                                            <th className={styles.hideOnPrint}>Type</th>
                                             <th>Running Balance</th>
+                                            <th className={styles.hideOnPrint}>Recurring</th>
+                                            <th className={styles.hideOnPrint}>Recurring Start</th>
+                                            <th className={styles.hideOnPrint}>Recurring End</th>
                                         </tr>
                                     </thead>
 
@@ -355,17 +381,29 @@ export default function RunningBalancePage({ role } = {}) {
                                                     <td>{formatDate(tx.date)}</td>
                                                     <td>{tx.category || "—"}</td>
 
-                                                    <td className={styles.expenseAmount}>
+                                                    <td className={`${styles.expenseAmount} ${styles.screenOnly}`}>
                                                         {tx.type === "expense" ? formatMoney(getTotalWithCharges(tx)) : ""}
                                                     </td>
 
-                                                    <td className={styles.revenueAmount}>
+                                                    <td className={`${styles.revenueAmount} ${styles.screenOnly}`}>
                                                         {tx.type === "income" ? formatMoney(getTotalWithCharges(tx)) : ""}
                                                     </td>
+
+                                                    <td className={styles.hideOnPrint}>{formatMoney(Number(tx.amount) || 0)}</td>
+                                                    <td className={styles.hideOnPrint}>{formatMoney(Number(tx.tax) || 0)}</td>
+                                                    <td className={styles.hideOnPrint}>{formatMoney(Number(tx.serviceFee) || 0)}</td>
+                                                    <td className={styles.hideOnPrint}>{formatMoney(Number(tx.discount) || 0)}</td>
+                                                    <td className={styles.hideOnPrint}>{formatMoney(Number(tx.otherCharge) || 0)}</td>
+                                                    <td className={styles.hideOnPrint}>{formatMoney(getTotalWithCharges(tx))}</td>
+                                                    <td className={styles.hideOnPrint}>{tx.type === "income" ? "Income" : "Expense"}</td>
 
                                                     <td className={tx.runningBalance >= 0 ? styles.revenueAmount : styles.expenseAmount}>
                                                         {formatMoney(tx.runningBalance)}
                                                     </td>
+
+                                                    <td className={styles.hideOnPrint}>{tx.isRecurring ? "Yes" : ""}</td>
+                                                    <td className={styles.hideOnPrint}>{tx.isRecurring ? formatDate(tx.date) : ""}</td>
+                                                    <td className={styles.hideOnPrint}>{tx.isRecurring ? (tx.recurringEndDate ? formatDate(tx.recurringEndDate) : "No end date") : ""}</td>
                                                 </tr>
                                             ))
                                         )}

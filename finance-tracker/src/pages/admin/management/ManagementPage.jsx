@@ -6,6 +6,9 @@ import "./pages/ManagementPage.css";
 import UsersPage from "./pages/UsersPage";
 import TransactionsPage from "./pages/TransactionsPage";
 import LogsPage from "./pages/LogsPage";
+import ExpenseDBoard from "../../users/Expense/expenseDBoard";
+import IncomeDBoard from "../../users/Income/incomeDBoard";
+import RunningBalancePage from "../../users/Transaction/transactionDBoard";
 
 // import UsersPage from "./pages/UsersPage";
 // import CategoriesPage from "./pages/CategoriesPage";
@@ -90,6 +93,9 @@ export default function ManagementPage() {
         <NavLink to="/admin/management" end>Dashboard</NavLink>
         <NavLink to="/admin/management/users">Users</NavLink>
         <NavLink to="/admin/management/transactions">Transactions</NavLink>
+        <NavLink to="/admin/management/expense">Expense</NavLink>
+        <NavLink to="/admin/management/income">Income</NavLink>
+        <NavLink to="/admin/management/running-balance">Running Balance</NavLink>
         <NavLink to="/admin/management/logs">Logs</NavLink>
 
       </div>
@@ -130,6 +136,9 @@ export default function ManagementPage() {
             }
           />
           <Route path="logs" element={<LogsPage logs={logs} />} />
+          <Route path="expense" element={<ExpenseDBoard role="staff" />} />
+          <Route path="income" element={<IncomeDBoard role="staff" />} />
+          <Route path="running-balance" element={<RunningBalancePage role="staff" />} />
 
 
           {/* 

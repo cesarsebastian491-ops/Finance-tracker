@@ -135,13 +135,13 @@ export default function expenseDBoard({ role } = {}) {
             const res = await fetch(url, {
                 headers: { Authorization: `Bearer ${storedUser.access_token}` }
             });
-            
+
             if (!res.ok) {
                 console.error("Failed to load transactions:", res.status);
                 setTransactions([]);
                 return;
             }
-            
+
             const data = await res.json();
             setTransactions(Array.isArray(data) ? data : []);
         } catch (err) {
@@ -333,19 +333,33 @@ export default function expenseDBoard({ role } = {}) {
         if (!rows || rows.length === 0) return;
 
         const headers = [
-            "Date",
+            "Title",
             "Category",
-            "Expense Amount",
-            "Additional Charges",
-            "Recurring"
+            "Date",
+            "Amount",
+            "Tax",
+            "Service Fee",
+            "Discount",
+            "Other Charge",
+            "Total",
+            "Recurring",
+            "Recurring Start",
+            "Recurring End"
         ];
 
         const values = rows.map(exp => [
-            formatDate(exp.date),
+            exp.expense || "—",
             exp.category || "—",
-            formatMoney(exp.amount),
-            formatAdditionalCharges(calculateExpenseAdditionalCharges(exp)),
-            exp.isRecurring ? "Yes" : ""
+            formatDate(exp.date),
+            formatMoney(Number(exp.amount) || 0),
+            formatMoney(Number(exp.tax) || 0),
+            formatMoney(Number(exp.serviceFee) || 0),
+            formatMoney(Number(exp.discount) || 0),
+            formatMoney(Number(exp.otherCharge) || 0),
+            formatMoney((Number(exp.amount) || 0) + calculateExpenseAdditionalCharges(exp)),
+            exp.isRecurring ? "Yes" : "",
+            exp.isRecurring ? formatDate(exp.date) : "",
+            exp.isRecurring ? (exp.recurringEndDate ? formatDate(exp.recurringEndDate) : "No end date") : ""
         ]);
 
         const csvContent =
@@ -434,46 +448,62 @@ export default function expenseDBoard({ role } = {}) {
                                 <div id="print-area">
                                     {/* <h2 style={{marginBottom: '20px'}}>Expense Report</h2> */}
                                     <table className={styles.txTable}>
-                                    <thead>
-                                        <tr>
-                                            {isStaff && <th>Username</th>}
-                                            <th>Expense</th>
-                                            <th>Category</th>
-                                            <th>Date</th>
-                                            <th className={styles.hideOnScreen}>Additional Charges</th>
-                                            <th>Amount</th>
-                                            <th>Recurring</th>
-                                        </tr>
-                                    </thead>
-
-                                    <tbody>
-                                        {finalExpenseList.length === 0 ? (
+                                        <thead>
                                             <tr>
-                                                <td colSpan={isStaff ? 7 : 6} style={{ textAlign: "center", padding: "20px" }}>
-                                                    No expenses to display
-                                                </td>
+                                                {isStaff && <th>Username</th>}
+                                                <th>Title</th>
+                                                <th>Category</th>
+                                                <th>Date</th>
+                                                <th>Amount</th>
+                                                <th className={styles.screenOnly}>Additional Charges</th>
+                                                <th className={styles.hideOnPrint}>Tax</th>
+                                                <th className={styles.hideOnPrint}>Service Fee</th>
+                                                <th className={styles.hideOnPrint}>Discount</th>
+                                                <th className={styles.hideOnPrint}>Other Charge</th>
+                                                <th>Total</th>
+                                                <th>Recurring</th>
+
+                                                <th className={styles.hideOnPrint}>Recurring Start</th>
+                                                <th className={styles.hideOnPrint}>Recurring End</th>
                                             </tr>
-                                        ) : (
-                                            finalExpenseList.map((exp) => (
-                                                <tr
-                                                    key={exp.id}
-                                                    className={styles.expenseRow}
-                                                    onClick={() => setSelectedExpense(exp)}
-                                                >
-                                                    {isStaff && <td>{exp.user?.username || '—'}</td>}
-                                                    <td>{exp.expense}</td>
-                                                    <td>{exp.category}</td>
-                                                    <td>{formatDate(exp.date)}</td>
-                                                    <td className={`${styles.expenseAmount} ${styles.hideOnScreen}`}>{formatAdditionalCharges(calculateExpenseAdditionalCharges(exp))}</td>
-                                                    <td className={styles.expenseAmount}>{formatMoney((Number(exp.amount) || 0) + calculateExpenseAdditionalCharges(exp))}</td>
-                                                    <td className={exp.isRecurring ? styles.recurringYes : styles.recurringNo}>
-                                                        {exp.isRecurring ? "Yes" : ""}
+                                        </thead>
+
+                                        <tbody>
+                                            {finalExpenseList.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={isStaff ? 7 : 6} style={{ textAlign: "center", padding: "20px" }}>
+                                                        No expenses to display
                                                     </td>
                                                 </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
+                                            ) : (
+                                                finalExpenseList.map((exp) => (
+                                                    <tr
+                                                        key={exp.id}
+                                                        className={styles.expenseRow}
+                                                        onClick={() => setSelectedExpense(exp)}
+                                                    >
+                                                        {isStaff && <td>{exp.user?.username || '—'}</td>}
+                                                        <td>{exp.expense}</td>
+                                                        <td>{exp.category}</td>
+                                                        <td>{formatDate(exp.date)}</td>
+                                                        <td className={styles.expenseAmount}>{formatMoney(Number(exp.amount) || 0)}</td>
+                                                        <td className={`${styles.expenseAmount} ${styles.screenOnly}`}>{formatAdditionalCharges(calculateExpenseAdditionalCharges(exp))}</td>
+                                                        <td className={`${styles.expenseAmount} ${styles.hideOnPrint}`}>{formatMoney(Number(exp.tax) || 0)}</td>
+                                                        <td className={`${styles.expenseAmount} ${styles.hideOnPrint}`}>{formatMoney(Number(exp.serviceFee) || 0)}</td>
+                                                        <td className={`${styles.expenseAmount} ${styles.hideOnPrint}`}>{formatMoney(Number(exp.discount) || 0)}</td>
+                                                        <td className={`${styles.expenseAmount} ${styles.hideOnPrint}`}>{formatMoney(Number(exp.otherCharge) || 0)}</td>
+                                                        <td className={styles.expenseAmount}>{formatMoney((Number(exp.amount) || 0) + calculateExpenseAdditionalCharges(exp))}</td>
+
+                                                        <td className={exp.isRecurring ? styles.recurringYes : styles.recurringNo}>
+                                                            {exp.isRecurring ? "Yes" : ""}
+                                                        </td>
+                                                        <td className={styles.hideOnPrint}>{exp.isRecurring ? formatDate(exp.date) : ""}</td>
+                                                        <td className={styles.hideOnPrint}>{exp.isRecurring ? (exp.recurringEndDate ? formatDate(exp.recurringEndDate) : "No end date") : ""}</td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </section>

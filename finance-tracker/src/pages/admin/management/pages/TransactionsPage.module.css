@@ -190,3 +190,57 @@
   background: var(--color-delete);
   color: var(--text-light);
 }
+
+/* Add row */
+.addRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.addLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  font-family: var(--font-body);
+  white-space: nowrap;
+}
+
+.addExpenseBtn,
+.addIncomeBtn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+  font-family: var(--font-body);
+}
+
+.addExpenseBtn {
+  background: rgba(239, 68, 68, 0.15);
+  color: #b91c1c;
+}
+
+.addExpenseBtn:hover:not(:disabled) {
+  background: #ef4444;
+  color: #fff;
+}
+
+.addIncomeBtn {
+  background: rgba(34, 197, 94, 0.15);
+  color: #15803d;
+}
+
+.addIncomeBtn:hover:not(:disabled) {
+  background: #22c55e;
+  color: #fff;
+}
+
+.addExpenseBtn:disabled,
+.addIncomeBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

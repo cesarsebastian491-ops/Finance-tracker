@@ -336,19 +336,33 @@ export default function IncomeDBoard({ role } = {}) {
         if (!rows || rows.length === 0) return;
 
         const headers = [
+            "Title",
+            "Category",
             "Date",
-            "Income Title",
-            "Income Amount",
-            "Additional Charges",
-            "Recurring"
+            "Amount",
+            "Tax",
+            "Service Fee",
+            "Discount",
+            "Other Charge",
+            "Total",
+            "Recurring",
+            "Recurring Start",
+            "Recurring End"
         ];
 
         const values = rows.map(inc => [
-            formatDate(inc.date),
             getIncomeTitle(inc),
-            formatMoney(inc.amount),
-            formatAdditionalCharges(calculateIncomeAdditionalCharges(inc)),
-            inc.isRecurring ? "Yes" : ""
+            inc.category || "—",
+            formatDate(inc.date),
+            formatMoney(Number(inc.amount) || 0),
+            formatMoney(Number(inc.tax) || 0),
+            formatMoney(Number(inc.serviceFee) || 0),
+            formatMoney(Number(inc.discount) || 0),
+            formatMoney(Number(inc.otherCharge) || 0),
+            formatMoney((Number(inc.amount) || 0) + calculateIncomeAdditionalCharges(inc)),
+            inc.isRecurring ? "Yes" : "",
+            inc.isRecurring ? formatDate(inc.date) : "",
+            inc.isRecurring ? (inc.recurringEndDate ? formatDate(inc.recurringEndDate) : "No end date") : ""
         ]);
 
         const csvContent =
@@ -435,11 +449,19 @@ export default function IncomeDBoard({ role } = {}) {
                                     <thead>
                                         <tr>
                                             {isStaff && <th>Username</th>}
-                                            <th>Income Title</th>
+                                            <th>Title</th>
+                                            <th>Category</th>
                                             <th>Date</th>
-                                            <th>Additional Charges</th>
                                             <th>Amount</th>
+                                            <th className={styles.screenOnly}>Additional Charges</th>
+                                            <th>Total</th>
                                             <th>Recurring</th>
+                                            <th className={styles.hideOnPrint}>Tax</th>
+                                            <th className={styles.hideOnPrint}>Service Fee</th>
+                                            <th className={styles.hideOnPrint}>Discount</th>
+                                            <th className={styles.hideOnPrint}>Other Charge</th>
+                                            <th className={styles.hideOnPrint}>Recurring Start</th>
+                                            <th className={styles.hideOnPrint}>Recurring End</th>
                                         </tr>
                                     </thead>
 
@@ -459,12 +481,20 @@ export default function IncomeDBoard({ role } = {}) {
                                                 >
                                                     {isStaff && <td>{inc.user?.username || '—'}</td>}
                                                     <td>{getIncomeTitle(inc)}</td>
+                                                    <td>{inc.category || '—'}</td>
                                                     <td>{formatDate(inc.date)}</td>
-                                                    <td className={styles.incomeAmount}>{formatAdditionalCharges(calculateIncomeAdditionalCharges(inc))}</td>
+                                                    <td className={styles.incomeAmount}>{formatMoney(Number(inc.amount) || 0)}</td>
+                                                    <td className={`${styles.incomeAmount} ${styles.screenOnly}`}>{formatAdditionalCharges(calculateIncomeAdditionalCharges(inc))}</td>
                                                     <td className={styles.incomeAmount}>{formatMoney((Number(inc.amount) || 0) + calculateIncomeAdditionalCharges(inc))}</td>
                                                     <td className={inc.isRecurring ? styles.recurringYes : styles.recurringNo}>
                                                         {inc.isRecurring ? "Yes" : ""}
                                                     </td>
+                                                    <td className={`${styles.incomeAmount} ${styles.hideOnPrint}`}>{formatMoney(Number(inc.tax) || 0)}</td>
+                                                    <td className={`${styles.incomeAmount} ${styles.hideOnPrint}`}>{formatMoney(Number(inc.serviceFee) || 0)}</td>
+                                                    <td className={`${styles.incomeAmount} ${styles.hideOnPrint}`}>{formatMoney(Number(inc.discount) || 0)}</td>
+                                                    <td className={`${styles.incomeAmount} ${styles.hideOnPrint}`}>{formatMoney(Number(inc.otherCharge) || 0)}</td>
+                                                    <td className={styles.hideOnPrint}>{inc.isRecurring ? formatDate(inc.date) : ""}</td>
+                                                    <td className={styles.hideOnPrint}>{inc.isRecurring ? (inc.recurringEndDate ? formatDate(inc.recurringEndDate) : "No end date") : ""}</td>
                                                 </tr>
                                             ))
                                         )}

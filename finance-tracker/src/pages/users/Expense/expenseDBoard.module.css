@@ -350,12 +350,35 @@
 /* PRINT & EXPORT STYLES                             */
 /* -------------------------------------------------- */
 
-.hideOnScreen {
+/* Hidden on screen, visible when printing */
+.hideOnPrint {
     display: none;
 }
 
 @media print {
-    .hideOnScreen {
+    @page {
+        size: landscape;
+        margin: 15mm;
+    }
+
+    .hideOnPrint {
         display: table-cell !important;
+    }
+
+    /* Hide screen-only columns when printing */
+    .screenOnly {
+        display: none !important;
+    }
+
+    .txTable tr.expenseRow {
+        background: rgba(239, 68, 68, 0.15) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .txTable th,
+    .txTable td {
+        font-size: 11px !important;
+        padding: 6px 8px !important;
     }
 }

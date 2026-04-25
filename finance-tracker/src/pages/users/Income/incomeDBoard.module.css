@@ -369,3 +369,38 @@
     transform: translateY(0);
   }
 }
+
+/* -------------------------------------------------- */
+/* PRINT & EXPORT STYLES                             */
+/* -------------------------------------------------- */
+
+.hideOnPrint {
+    display: none;
+}
+
+@media print {
+    @page {
+        size: landscape;
+        margin: 15mm;
+    }
+
+    .hideOnPrint {
+        display: table-cell !important;
+    }
+
+    .screenOnly {
+        display: none !important;
+    }
+
+    .txTable tr.incomeRow {
+        background: rgba(34, 197, 94, 0.15) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .txTable th,
+    .txTable td {
+        font-size: 11px !important;
+        padding: 6px 8px !important;
+    }
+}

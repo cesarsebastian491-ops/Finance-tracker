@@ -17,6 +17,9 @@ export default function TransactionsPage() {
     const [infoTransaction, setInfoTransaction] = useState(null);
     const [sortConfig, setSortConfig] = useState({ key: "date", direction: "desc" });
     const [typeFilter, setTypeFilter] = useState("all");
+    const [users, setUsers] = useState([]);
+    const [targetUserId, setTargetUserId] = useState("");
+    const [addType, setAddType] = useState(null);
 
     const stored = JSON.parse(localStorage.getItem("user"));
     const token = stored?.access_token;
@@ -42,6 +45,18 @@ export default function TransactionsPage() {
         }
     };
 
+    const fetchUsers = async () => {
+        try {
+            const res = await fetch(`${API_URL}/admin/users`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await res.json();
+            setUsers(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     const fetchTransactions = async () => {
         try {
             const res = await fetch(`${API_URL}/transactions/admin/transactions`, {
@@ -57,30 +72,47 @@ export default function TransactionsPage() {
 
     useEffect(() => {
         fetchTransactions();
+        fetchUsers();
     }, []);
 
-    const handleAdminUpdate = async (updatedData) => {
+    const handleAdminSubmit = async (formData) => {
         try {
-            const res = await fetch(`${API_URL}/transactions/admin/update/${updatedData.id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(updatedData),
-            });
+            let res;
 
-            if (!res.ok) throw new Error("Failed to update");
+            if (!selected) {
+                // ADD NEW — POST to regular endpoint with target user
+                const payload = { ...formData, user: { id: Number(targetUserId) } };
+                const endpoint = addType === "expense"
+                    ? `${API_URL}/transactions/add-expense`
+                    : `${API_URL}/transactions/add-income`;
 
-            await fetchTransactions();
-
-            // ⭐ Close the correct modal based on transaction type
-            if (updatedData.type === "expense") {
-                setShowExpenseModal(false);
+                res = await fetch(endpoint, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(payload),
+                });
             } else {
-                setShowIncomeModal(false);
+                // EDIT EXISTING — PUT admin update
+                res = await fetch(`${API_URL}/transactions/admin/update/${selected.id}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(formData),
+                });
             }
 
+            if (!res.ok) throw new Error("Failed to save transaction");
+
+            await fetchTransactions();
+            setShowExpenseModal(false);
+            setShowIncomeModal(false);
+            setSelected(null);
+            setAddType(null);
         } catch (err) {
             console.error(err);
         }
@@ -193,6 +225,47 @@ export default function TransactionsPage() {
                         📅 {sortConfig.direction === "desc" ? "New to Old" : "Old to New"}
                     </button>
                 </div>
+
+                <div className={styles.addRow}>
+                    <span className={styles.addLabel}>Add for:</span>
+                    <select
+                        value={targetUserId}
+                        onChange={(e) => setTargetUserId(e.target.value)}
+                        className={styles.filterSelect}
+                    >
+                        <option value="">Select user...</option>
+                        {users.map((u) => (
+                            <option key={u.id} value={u.id}>
+                                {u.username}
+                            </option>
+                        ))}
+                    </select>
+
+                    <button
+                        className={styles.addExpenseBtn}
+                        disabled={!targetUserId}
+                        onClick={() => {
+                            setSelected(null);
+                            setAddType("expense");
+                            setShowExpenseModal(true);
+                        }}
+                    >
+                        + Add Expense
+                    </button>
+
+                    <button
+                        className={styles.addIncomeBtn}
+                        disabled={!targetUserId}
+                        onClick={() => {
+                            setSelected(null);
+                            setAddType("income");
+                            setShowIncomeModal(true);
+                        }}
+                    >
+                        + Add Income
+                    </button>
+                </div>
+
                 <div className={styles.tableWrapper}>
                     <table className={styles.adminTable}>
                         <thead>
@@ -297,18 +370,18 @@ export default function TransactionsPage() {
             {showExpenseModal && (
                 <AddExpenseModal
                     open={showExpenseModal}
-                    onClose={() => setShowExpenseModal(false)}
+                    onClose={() => { setShowExpenseModal(false); setSelected(null); setAddType(null); }}
                     editData={selected}
-                    onSubmit={handleAdminUpdate}
+                    onSubmit={handleAdminSubmit}
                 />
             )}
 
             {showIncomeModal && (
                 <AddIncomeModal
                     open={showIncomeModal}
-                    onClose={() => setShowIncomeModal(false)}
+                    onClose={() => { setShowIncomeModal(false); setSelected(null); setAddType(null); }}
                     editData={selected}
-                    onSubmit={handleAdminUpdate}
+                    onSubmit={handleAdminSubmit}
                 />
             )}
 
