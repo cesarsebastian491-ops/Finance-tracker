@@ -2,11 +2,17 @@
 /* EXPENSE PAGE LAYOUT (DESKTOP ONLY)                 */
 /* -------------------------------------------------- */
 
+.title {
+    display: block;
+    margin-bottom: 20px;
+}
+
 .title h5 {
     font-size: 1.5rem;
     color: var(--color-tertiary);
     font-family: var(--font-headline);
     padding-bottom: 20px;
+    margin: 0;
 }
 
 .expenseLayout {
