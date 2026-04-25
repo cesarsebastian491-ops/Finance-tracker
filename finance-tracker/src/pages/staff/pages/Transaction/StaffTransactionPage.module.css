@@ -109,7 +109,7 @@
   grid-template-columns: repeat(4, 1fr);
   padding: 10px 0;
   border-bottom: 1px solid var(--staff-border);
-  font-size: 0.95rem;
+  font-size: 14px;
 }
 
 .row:last-child {

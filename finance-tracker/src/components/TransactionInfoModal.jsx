@@ -100,10 +100,20 @@ export default function TransactionInfoModal({ transaction, onClose, onEdit, onD
                                         <span className={styles.label}>Frequency</span>
                                         <span className={styles.value}>{tx.recurringType}</span>
                                     </div>
+                                    <div className={styles.infoRow}>
+                                        <span className={styles.label}>Starts On</span>
+                                        <span className={styles.value}>{formatDate(tx.date)}</span>
+                                    </div>
                                     {tx.recurringEndDate && (
                                         <div className={styles.infoRow}>
                                             <span className={styles.label}>Ends On</span>
                                             <span className={styles.value}>{formatDate(tx.recurringEndDate)}</span>
+                                        </div>
+                                    )}
+                                    {!tx.recurringEndDate && (
+                                        <div className={styles.infoRow}>
+                                            <span className={styles.label}>Ends On</span>
+                                            <span className={styles.value}>No end date</span>
                                         </div>
                                     )}
                                 </>

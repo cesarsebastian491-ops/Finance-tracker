@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAppName } from "../../components/hooks/UseAppName";
+import { useAutoLogout } from "../../components/hooks/useAutoLogout";
 import { API_URL } from "../../config";
 
 export default function UserLayout() {
@@ -109,6 +110,9 @@ export default function UserLayout() {
 
         return () => clearInterval(interval);
     }, []);
+
+    // Auto-logout after 15 minutes of inactivity, with 1 minute warning
+    useAutoLogout(15, 1);
 
     return (
         <div className="container">

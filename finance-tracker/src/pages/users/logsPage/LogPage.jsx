@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import UniversalFilterModal from "../../../components/universalfilter/universalFilterModal";
+import { CurrencyContext } from "../../../context/CurrencyContext";
 import styles from "./LogPage.module.css";
 import { API_URL } from "../../../config";
 
@@ -25,6 +26,7 @@ function toLocalDateKey(value) {
 
 export default function LogsPage() {
     // 1️⃣ STATE
+    const { activeCurrency } = useContext(CurrencyContext);
     const [user, setUser] = useState(null);
     const [logs, setLogs] = useState([]);
     const [openFilter, setOpenFilter] = useState(false);
@@ -131,7 +133,17 @@ export default function LogsPage() {
 
     if (!user) return null;
 
-    // 6️⃣ DATE FORMATTER
+    // 6️⃣ CURRENCY FORMATTER
+    function formatMoney(amount) {
+        return new Intl.NumberFormat(undefined, {
+            style: "currency",
+            currency: activeCurrency?.code || 'PHP',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(Number(amount) || 0);
+    }
+
+    // 7️⃣ DATE FORMATTER
     function formatDate(dateString) {
         const date = new Date(dateString);
 

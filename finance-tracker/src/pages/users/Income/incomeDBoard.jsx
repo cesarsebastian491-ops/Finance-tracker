@@ -161,9 +161,10 @@ export default function IncomeDBoard({ role } = {}) {
     }
 
     function formatAdditionalCharges(value) {
-        if (value === 0) return "None";
-        if (value < 0) return `Less ${formatMoney(Math.abs(value))}`;
-        return formatMoney(value);
+        const numValue = Number(value) || 0;
+        if (numValue === 0) return "None";
+        if (numValue < 0) return `Less ${formatMoney(Math.abs(numValue))}`;
+        return formatMoney(numValue);
     }
 
     function getCurrentMonthTransactions(transactions) {

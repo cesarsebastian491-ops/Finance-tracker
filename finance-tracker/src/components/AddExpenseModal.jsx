@@ -84,7 +84,7 @@ export default function AddExpenseModal({ open, onClose, onSubmit, editData }) {
                 type: editData.type || "expense",
                 expense: editData.expense || "",
                 category: editData.category || "",
-                date: editData.date || "",
+                date: formatDateForInput(editData.date) || "",
                 amount: editData.amount || "",
                 description: editData.description || "",
                 userId: editData.userId || editData.user?.id,
@@ -96,8 +96,8 @@ export default function AddExpenseModal({ open, onClose, onSubmit, editData }) {
 
                 isRecurring: editData.isRecurring || false,
                 recurringType: editData.recurringType || "",
-                recurringEndDate: editData.recurringEndDate || "",
-                nextDueDate: editData.nextDueDate || ""
+                recurringEndDate: formatDateForInput(editData.recurringEndDate) || "",
+                nextDueDate: formatDateForInput(editData.nextDueDate) || ""
             });
         } else {
             setForm({
@@ -160,6 +160,15 @@ export default function AddExpenseModal({ open, onClose, onSubmit, editData }) {
     }, [open]);
 
     if (!open) return null;
+
+    function formatDateForInput(dateString) {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
 
     function handleChange(e) {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -319,8 +328,8 @@ export default function AddExpenseModal({ open, onClose, onSubmit, editData }) {
             </div>
 
             {showChargesModal && (
-                <div className={styles.subModalOverlay} onClick={(e) => e.stopPropagation()}>
-                    <div className={styles.subModal}>
+                <div className={styles.subModalOverlay} onClick={() => setShowChargesModal(false)}>
+                    <div className={styles.subModal} onClick={(e) => e.stopPropagation()}>
                         <h3>Additional Charges</h3>
 
                         <div className={styles.modalSection}>
@@ -353,8 +362,8 @@ export default function AddExpenseModal({ open, onClose, onSubmit, editData }) {
             )}
 
             {showRecurringModal && (
-                <div className={styles.subModalOverlay} onClick={(e) => e.stopPropagation()}>
-                    <div className={styles.subModal}>
+                <div className={styles.subModalOverlay} onClick={() => setShowRecurringModal(false)}>
+                    <div className={styles.subModal} onClick={(e) => e.stopPropagation()}>
                         <h3>Recurring Options</h3>
 
                         <div className={styles.modalSection}>

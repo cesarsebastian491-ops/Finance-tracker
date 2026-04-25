@@ -23,6 +23,8 @@ export class RecurringService {
     for (const item of recurring) {
       // Stop if end date passed
       if (item.recurringEndDate && dayjs(today).isAfter(item.recurringEndDate)) {
+        // Mark as done by setting isRecurring to 0
+        await this.repo.update(item.id, { isRecurring: 0 });
         continue;
       }
 

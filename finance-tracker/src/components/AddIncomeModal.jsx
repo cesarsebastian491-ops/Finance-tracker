@@ -75,7 +75,7 @@ export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
             setForm({
                 source: editData.source || "",
                 category: editData.category || "",
-                date: editData.date || "",
+                date: formatDateForInput(editData.date) || "",
                 amount: editData.amount || "",
                 description: editData.description || "",
 
@@ -86,8 +86,8 @@ export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
 
                 isRecurring: editData.isRecurring === 1,
                 recurringType: editData.recurringType || "",
-                recurringEndDate: editData.recurringEndDate || "",
-                nextDueDate: editData.nextDueDate || ""
+                recurringEndDate: formatDateForInput(editData.recurringEndDate) || "",
+                nextDueDate: formatDateForInput(editData.nextDueDate) || ""
             });
         } else {
             setForm({
@@ -127,6 +127,15 @@ export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
     }, [open]);
 
     if (!open) return null;
+
+    function formatDateForInput(dateString) {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
 
     function sanitize(value) {
         return value
@@ -307,8 +316,8 @@ export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
 
             {/* ADDITIONAL AMOUNTS MODAL */}
             {showChargesModal && (
-                <div className={styles.subModalOverlay} onClick={(e) => e.stopPropagation()}>
-                    <div className={styles.subModal}>
+                <div className={styles.subModalOverlay} onClick={() => setShowChargesModal(false)}>
+                    <div className={styles.subModal} onClick={(e) => e.stopPropagation()}>
                         <h3>Additional Amounts</h3>
 
                         <div className={styles.modalSection}>
@@ -342,8 +351,8 @@ export default function AddIncomeModal({ open, onClose, onSubmit, editData }) {
 
             {/* RECURRING MODAL */}
             {showRecurringModal && (
-                <div className={styles.subModalOverlay} onClick={(e) => e.stopPropagation()}>
-                    <div className={styles.subModal}>
+                <div className={styles.subModalOverlay} onClick={() => setShowRecurringModal(false)}>
+                    <div className={styles.subModal} onClick={(e) => e.stopPropagation()}>
                         <h3>Recurring Options</h3>
 
                         <div className={styles.modalSection}>

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Transaction } from './entities/transaction.entity';
 import { Category } from './entities/category.entity';
 import { LogsService } from '../logs/logs.service';
+import { CurrenciesService } from '../currencies/currencies.service';
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 
 @Injectable()
@@ -36,6 +37,7 @@ export class TransactionsService {
     @InjectRepository(Category)
     private categoryRepo: Repository<Category>,
     private readonly logsService: LogsService,
+    private readonly currenciesService: CurrenciesService,
   ) { }
 
   private async ensureDefaultCategories(): Promise<void> {
@@ -211,10 +213,12 @@ export class TransactionsService {
       nextDueDate: dto.nextDueDate ?? null,
     });
 
+    const activeCurrency = await this.currenciesService.getActiveCurrency();
+    const currencySymbol = activeCurrency?.symbol || '$';
     await this.logsService.create({
       userId: dto.user.id,
       action: 'ADD_EXPENSE',
-      message: `Added expense '${dto.expense}' for $${dto.amount}`,
+      message: `Added expense '${dto.expense}' for ${currencySymbol}${dto.amount}`,
     });
 
     return expense;
@@ -242,10 +246,12 @@ export class TransactionsService {
       nextDueDate: dto.nextDueDate ?? null,
     });
 
+    const activeCurrency = await this.currenciesService.getActiveCurrency();
+    const currencySymbol = activeCurrency?.symbol || '$';
     await this.logsService.create({
       userId: dto.user.id,
       action: 'EDIT_EXPENSE',
-      message: `Updated expense '${dto.expense}' to $${dto.amount}`,
+      message: `Updated expense '${dto.expense}' to ${currencySymbol}${dto.amount}`,
     });
 
     return this.repo.findOne({ where: { id } });
@@ -290,10 +296,12 @@ export class TransactionsService {
       nextDueDate: dto.nextDueDate ?? null,
     });
 
+    const activeCurrency = await this.currenciesService.getActiveCurrency();
+    const currencySymbol = activeCurrency?.symbol || '$';
     await this.logsService.create({
       userId: dto.user.id,
       action: 'ADD_INCOME',
-      message: `Added income '${incomeTitle || 'Untitled'}' for $${dto.amount}`,
+      message: `Added income '${incomeTitle || 'Untitled'}' for ${currencySymbol}${dto.amount}`,
     });
 
     return income;

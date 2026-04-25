@@ -1,7 +1,10 @@
 import { NavLink, Outlet } from "react-router-dom";
+import { useAutoLogout } from "../../../components/hooks/useAutoLogout";
 import "./AdminLayout.css";
 
 export default function AdminLayout() {
+  // Auto-logout after 15 minutes of inactivity, with 1 minute warning
+  useAutoLogout(15, 1);
   
   return (
     <div className="admin-layout">

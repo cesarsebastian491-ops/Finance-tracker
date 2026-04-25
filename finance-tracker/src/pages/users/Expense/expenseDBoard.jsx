@@ -34,6 +34,12 @@ export default function expenseDBoard({ role } = {}) {
 
     async function handleAddExpense(data) {
         try {
+            const storedUser = JSON.parse(localStorage.getItem("user"));
+            if (!storedUser?.access_token) {
+                alert("Session expired. Please login again.");
+                return;
+            }
+
             const payload = {
                 ...data,
                 user: { id: userId }   // ⭐ correct field
@@ -43,14 +49,20 @@ export default function expenseDBoard({ role } = {}) {
                 // UPDATE
                 await fetch(`${API_URL}/transactions/update-expense/${editData.id}`, {
                     method: "PUT",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${storedUser.access_token}`,
+                    },
                     body: JSON.stringify(payload),
                 });
             } else {
                 // CREATE
                 await fetch(`${API_URL}/transactions/add-expense`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${storedUser.access_token}`,
+                    },
                     body: JSON.stringify(payload),
                 });
             }
@@ -161,9 +173,10 @@ export default function expenseDBoard({ role } = {}) {
     }
 
     function formatAdditionalCharges(value) {
-        if (value === 0) return "None";
-        if (value < 0) return `Less ${formatMoney(Math.abs(value))}`;
-        return formatMoney(value);
+        const numValue = Number(value) || 0;
+        if (numValue === 0) return "None";
+        if (numValue < 0) return `Less ${formatMoney(Math.abs(numValue))}`;
+        return formatMoney(numValue);
     }
 
     function formatDate(dateString) {
